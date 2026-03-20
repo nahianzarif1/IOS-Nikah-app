@@ -1,0 +1,94 @@
+//
+//  ContentView.swift
+//  Nikah
+//
+//  Created by Nahian Zarif on 9/3/26.
+//
+
+import SwiftUI
+import Firebase
+import FirebaseFirestore
+
+// MARK: - Root View (Auth Gate)
+struct RootView: View {
+    @EnvironmentObject var authVM: AuthViewModel
+
+    var body: some View {
+        Group {
+            if authVM.isLoggedIn {
+                if let user = authVM.currentUser {
+                    if user.profileCompleted {
+                        MainTabView()
+                            .environmentObject(authVM)
+                    } else {
+                        NavigationStack {
+                            CreateProfileView(user: user)
+                                .environmentObject(authVM)
+                        }
+                    }
+                } else {
+                    // Loading user data
+                    VStack(spacing: 16) {
+                        Image(systemName: "moon.stars.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.nikahGreen)
+                        Text("Nikah")
+                            .font(.system(size: 36, weight: .bold, design: .rounded))
+                            .foregroundColor(.nikahGreen)
+                        ProgressView()
+                            .padding(.top, 8)
+                    }
+                }
+            } else {
+                LoginView()
+                    .environmentObject(authVM)
+            }
+        }
+    }
+}
+
+// MARK: - Main Tab View
+struct MainTabView: View {
+    @EnvironmentObject var authVM: AuthViewModel
+
+    var body: some View {
+        TabView {
+            HomeFeedView()
+                .environmentObject(authVM)
+                .tabItem {
+                    Label("Discover", systemImage: "heart.circle.fill")
+                }
+
+            MatchListView()
+                .environmentObject(authVM)
+                .tabItem {
+                    Label("Matches", systemImage: "star.fill")
+                }
+
+            ChatListView()
+                .environmentObject(authVM)
+                .tabItem {
+                    Label("Messages", systemImage: "bubble.left.and.bubble.right.fill")
+                }
+
+            SettingsView()
+                .environmentObject(authVM)
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape.fill")
+                }
+        }
+        .tint(.nikahGreen)
+    }
+}
+
+// MARK: - Legacy ContentView (kept for compatibility)
+struct ContentView: View {
+    var body: some View {
+        RootView()
+    }
+}
+
+#Preview {
+    ContentView().environmentObject(AuthViewModel())
+}
+
