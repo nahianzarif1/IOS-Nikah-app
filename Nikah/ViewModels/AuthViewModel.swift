@@ -10,8 +10,11 @@ import FirebaseFirestore
 final class AuthViewModel: ObservableObject {
     @Published var currentUser: UserModel?
     @Published var isLoggedIn: Bool = false
+    @Published var isEmailVerified: Bool? = nil
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
+    @Published var isSendingVerificationEmail: Bool = false
+    @Published var emailVerificationErrorMessage: String?
 
     private var authStateHandle: AuthStateDidChangeListenerHandle?
 
@@ -20,10 +23,12 @@ final class AuthViewModel: ObservableObject {
             Task { @MainActor in
                 if let user = user {
                     self?.isLoggedIn = true
+                    self?.isEmailVerified = user.isEmailVerified
                     self?.fetchCurrentUser(uid: user.uid)
                 } else {
                     self?.isLoggedIn = false
                     self?.currentUser = nil
+                    self?.isEmailVerified = nil
                 }
             }
         }
@@ -45,6 +50,7 @@ final class AuthViewModel: ObservableObject {
                 self.isLoading = false
                 switch result {
                 case .success(let uid):
+                    self.isEmailVerified = FirebaseManager.shared.auth.currentUser?.isEmailVerified
                     self.fetchCurrentUser(uid: uid)
                 case .failure(let error):
                     self.errorMessage = Self.friendlyError(error)
@@ -66,12 +72,48 @@ final class AuthViewModel: ObservableObject {
                 case .success(let user):
                     self.currentUser = user
                     self.isLoggedIn = true
+                    self.isEmailVerified = FirebaseManager.shared.auth.currentUser?.isEmailVerified
                 case .failure(let error):
                     // Map Firebase "internal error" to a human-readable message
                     let msg = Self.friendlyError(error)
                     self.errorMessage = msg
                     print("❌ Register error: \(error)")
                 }
+            }
+        }
+    }
+
+    // MARK: - Email Verification
+    func sendVerificationEmail() {
+        isSendingVerificationEmail = true
+        emailVerificationErrorMessage = nil
+        AuthService.shared.sendEmailVerification { [weak self] error in
+            Task { @MainActor in
+                guard let self else { return }
+                self.isSendingVerificationEmail = false
+                if let error = error {
+                    self.emailVerificationErrorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    func refreshEmailVerificationStatus() {
+        guard let user = FirebaseManager.shared.auth.currentUser else {
+            isEmailVerified = false
+            return
+        }
+        isSendingVerificationEmail = true
+        emailVerificationErrorMessage = nil
+        user.reload { [weak self] error in
+            Task { @MainActor in
+                guard let self else { return }
+                self.isSendingVerificationEmail = false
+                if let error = error {
+                    self.emailVerificationErrorMessage = error.localizedDescription
+                    return
+                }
+                self.isEmailVerified = FirebaseManager.shared.auth.currentUser?.isEmailVerified
             }
         }
     }
