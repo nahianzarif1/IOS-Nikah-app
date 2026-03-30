@@ -37,9 +37,23 @@ final class AuthService {
                 if let err = err {
                     completion(.failure(err))
                 } else {
-                    completion(.success(newUser))
+                    // Send email verification after account creation.
+                    self.sendEmailVerification { _ in
+                        completion(.success(newUser))
+                    }
                 }
             }
+        }
+    }
+
+    // MARK: - Email Verification
+    func sendEmailVerification(completion: @escaping (Error?) -> Void) {
+        guard let user = manager.auth.currentUser else {
+            completion(NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found."]))
+            return
+        }
+        user.sendEmailVerification { error in
+            completion(error)
         }
     }
 

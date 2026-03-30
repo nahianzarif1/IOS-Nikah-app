@@ -16,7 +16,11 @@ struct RootView: View {
     var body: some View {
         Group {
             if authVM.isLoggedIn {
-                if let user = authVM.currentUser {
+                // Block app access until the user verifies their email.
+                if authVM.isEmailVerified == false {
+                    EmailVerificationView()
+                        .environmentObject(authVM)
+                } else if let user = authVM.currentUser {
                     if user.profileCompleted {
                         MainTabView()
                             .environmentObject(authVM)
