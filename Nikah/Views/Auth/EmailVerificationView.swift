@@ -3,6 +3,7 @@ import SwiftUI
 struct EmailVerificationView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @State private var localStatusMessage: String?
+    @State private var animateIcon = false
 
     private var loading: Bool {
         authVM.isSendingVerificationEmail
@@ -14,6 +15,9 @@ struct EmailVerificationView: View {
                 Image(systemName: "mail.badge")
                     .font(.system(size: 64))
                     .foregroundColor(.nikahGreen)
+                    .scaleEffect(animateIcon ? 1.02 : 0.98)
+                    .opacity(animateIcon ? 1.0 : 0.85)
+                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: animateIcon)
 
                 Text("Verify your email")
                     .font(.system(size: 26, weight: .bold, design: .rounded))
@@ -24,18 +28,20 @@ struct EmailVerificationView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
 
-                if let msg = localStatusMessage {
+        if let msg = localStatusMessage {
                     Text(msg)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.top, 4)
+            .transition(.opacity)
                 }
 
-                if let err = authVM.emailVerificationErrorMessage {
+        if let err = authVM.emailVerificationErrorMessage {
                     Text(err)
                         .font(.caption)
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
+            .transition(.opacity)
                 }
 
                 Spacer(minLength: 0)
@@ -61,8 +67,15 @@ struct EmailVerificationView: View {
                     } label: {
                         Text("Resend email")
                     }
-                    .nikahButton(color: Color(.systemGray5))
+                    .nikahButton(color: Color(.systemGray5), textColor: .nikahGreen)
                     .disabled(loading)
+
+                    Button {
+                        authVM.logout()
+                    } label: {
+                        Text("Back to Login")
+                    }
+                    .nikahButton(color: Color(.systemGray6), textColor: .nikahGreen)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 24)
@@ -73,6 +86,21 @@ struct EmailVerificationView: View {
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 authVM.refreshEmailVerificationStatus()
+                animateIcon = true
+            }
+            .onChange(of: authVM.isEmailVerified) { _, newValue in
+                if newValue == true {
+                    localStatusMessage = "Email verified! Loading..."
+                }
+            }
+            .task {
+                while !Task.isCancelled {
+                    try? await Task.sleep(nanoseconds: 20_000_000_000)
+                    await MainActor.run {
+                        authVM.refreshEmailVerificationStatus()
+                        localStatusMessage = "Checking verification status..."
+                    }
+                }
             }
         }
     }

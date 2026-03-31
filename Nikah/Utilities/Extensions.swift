@@ -49,10 +49,10 @@ extension View {
             .shadow(color: .black.opacity(0.07), radius: 8, x: 0, y: 4)
     }
 
-    func nikahButton(color: Color = AppColors.green) -> some View {
+    func nikahButton(color: Color = AppColors.green, textColor: Color = .white) -> some View {
         self
             .font(.system(size: 16, weight: .semibold))
-            .foregroundColor(.white)
+            .foregroundColor(textColor)
             .frame(maxWidth: .infinity)
             .frame(height: 52)
             .background(color)

@@ -15,8 +15,11 @@ final class AuthViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var isSendingVerificationEmail: Bool = false
     @Published var emailVerificationErrorMessage: String?
+    @Published var shouldBypassEmailVerification: Bool = false
 
     private var authStateHandle: AuthStateDidChangeListenerHandle?
+    private var verificationTimeoutTask: Task<Void, Never>?
+    private let legacyBypassCutoff: Date = Calendar.current.date(from: DateComponents(year: 2026, month: 3, day: 31)) ?? .distantPast
 
     init() {
         authStateHandle = FirebaseManager.shared.auth.addStateDidChangeListener { [weak self] _, user in
@@ -29,6 +32,7 @@ final class AuthViewModel: ObservableObject {
                     self?.isLoggedIn = false
                     self?.currentUser = nil
                     self?.isEmailVerified = nil
+                    self?.shouldBypassEmailVerification = false
                 }
             }
         }
@@ -87,10 +91,12 @@ final class AuthViewModel: ObservableObject {
     func sendVerificationEmail() {
         isSendingVerificationEmail = true
         emailVerificationErrorMessage = nil
+        startVerificationTimeout()
         AuthService.shared.sendEmailVerification { [weak self] error in
             Task { @MainActor in
                 guard let self else { return }
                 self.isSendingVerificationEmail = false
+                self.verificationTimeoutTask?.cancel()
                 if let error = error {
                     self.emailVerificationErrorMessage = error.localizedDescription
                 }
@@ -105,15 +111,37 @@ final class AuthViewModel: ObservableObject {
         }
         isSendingVerificationEmail = true
         emailVerificationErrorMessage = nil
+        startVerificationTimeout()
         user.reload { [weak self] error in
             Task { @MainActor in
                 guard let self else { return }
                 self.isSendingVerificationEmail = false
+                self.verificationTimeoutTask?.cancel()
                 if let error = error {
                     self.emailVerificationErrorMessage = error.localizedDescription
                     return
                 }
                 self.isEmailVerified = FirebaseManager.shared.auth.currentUser?.isEmailVerified
+                if self.isEmailVerified == true {
+                    self.emailVerificationErrorMessage = nil
+                    self.markEmailVerifiedIfNeeded()
+                } else {
+                    self.emailVerificationErrorMessage = "Not verified yet. Please open the email link and try again."
+                }
+            }
+        }
+    }
+
+    private func startVerificationTimeout() {
+        verificationTimeoutTask?.cancel()
+        verificationTimeoutTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 20_000_000_000)
+            await MainActor.run {
+                guard let self else { return }
+                if self.isSendingVerificationEmail {
+                    self.isSendingVerificationEmail = false
+                    self.emailVerificationErrorMessage = "Verification timed out. Please try again."
+                }
             }
         }
     }
@@ -172,11 +200,28 @@ final class AuthViewModel: ObservableObject {
                 switch result {
                 case .success(let user):
                     self?.currentUser = user
+                    self?.updateBypassStatus(for: user)
+                    self?.markEmailVerifiedIfNeeded()
                 case .failure(let error):
                     self?.errorMessage = error.localizedDescription
                 }
             }
         }
+    }
+
+    private func updateBypassStatus(for user: UserModel) {
+        // Legacy users created before cutoff or users manually marked verified can bypass email verification.
+        let legacyUser = user.createdAt < legacyBypassCutoff
+        shouldBypassEmailVerification = legacyUser || user.isVerified
+    }
+
+    private func markEmailVerifiedIfNeeded() {
+        guard isEmailVerified == true, var user = currentUser else { return }
+        guard user.isVerified == false else { return }
+        user.isVerified = true
+        currentUser = user
+        UserService.shared.updateUser(user) { _ in }
+        updateBypassStatus(for: user)
     }
 
     // MARK: - Refresh

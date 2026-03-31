@@ -17,7 +17,7 @@ struct RootView: View {
         Group {
             if authVM.isLoggedIn {
                 // Block app access until the user verifies their email.
-                if authVM.isEmailVerified == false {
+                if authVM.isEmailVerified == false && authVM.shouldBypassEmailVerification == false {
                     EmailVerificationView()
                         .environmentObject(authVM)
                 } else if let user = authVM.currentUser {
@@ -48,6 +48,8 @@ struct RootView: View {
                     .environmentObject(authVM)
             }
         }
+        .animation(.easeInOut(duration: 0.25), value: authVM.isLoggedIn)
+        .animation(.easeInOut(duration: 0.25), value: authVM.isEmailVerified)
     }
 }
 

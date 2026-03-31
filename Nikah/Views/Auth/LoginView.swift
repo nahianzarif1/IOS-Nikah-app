@@ -116,8 +116,7 @@ struct LoginView: View {
                         } label: {
                             Text("Create New Account")
                         }
-                        .nikahButton(color: Color(.systemGray5))
-                        .foregroundColor(.primary)
+                        .nikahButton(color: Color(.systemGray5), textColor: .nikahGreen)
                     }
                     .padding(24)
                     .cardStyle()
