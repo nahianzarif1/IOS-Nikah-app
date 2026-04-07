@@ -15,6 +15,8 @@ struct CreateProfileView: View {
         _profileVM = StateObject(wrappedValue: ProfileViewModel(user: user))
     }
 
+
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
