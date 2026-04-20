@@ -31,6 +31,7 @@ struct AppConstants {
     static let maxHeight = 7.0
     static let cloudinaryCloudName = "dfihq1if7"
     static let cloudinaryUploadPreset = "nikah_profile"
+    static let strictGuardianOnlyCommunication = true
 }
 
 struct CollectionNames {

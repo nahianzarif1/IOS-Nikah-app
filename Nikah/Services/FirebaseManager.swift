@@ -30,8 +30,28 @@ final class FirebaseManager {
         firestore.collection("likes")
     }
 
+    var requestsCollection: CollectionReference {
+        firestore.collection("requests")
+    }
+
     var reportsCollection: CollectionReference {
         firestore.collection("reports")
+    }
+
+    var shortlistsCollection: CollectionReference {
+        firestore.collection("shortlists")
+    }
+
+    var communityPostsCollection: CollectionReference {
+        firestore.collection("communityPosts")
+    }
+
+    var supportTicketsCollection: CollectionReference {
+        firestore.collection("supportTickets")
+    }
+
+    var successStoriesCollection: CollectionReference {
+        firestore.collection("successStories")
     }
 
     func messagesCollection(matchId: String) -> CollectionReference {

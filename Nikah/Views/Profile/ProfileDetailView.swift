@@ -74,13 +74,21 @@ struct ProfileDetailView: View {
 
                     DetailCard(title: "Religious", icon: "moon.stars.fill") {
                         InfoRow(label: "Religion", value: user.religion)
+                        InfoRow(label: "Madhhab", value: user.madhhab.capitalized)
+                        InfoRow(label: "Deen Level", value: "\(user.deenLevel)/5")
                         InfoRow(label: "Prayer/Day", value: user.prayerFrequency)
                         if user.gender == "male" {
                             InfoRow(label: "Beard", value: user.beard ? "Yes" : "No")
                         }
                         if user.gender == "female" {
                             InfoRow(label: "Hijab", value: user.hijab ? "Yes" : "No")
+                            InfoRow(label: "Niqab", value: user.niqab ? "Yes" : "No")
                         }
+                    }
+
+                    DetailCard(title: "Guardian/Wali", icon: "person.2.fill") {
+                        InfoRow(label: "Name", value: user.guardianName)
+                        InfoRow(label: "Contact", value: user.guardianContact)
                     }
 
                     // MARK: Safety Actions

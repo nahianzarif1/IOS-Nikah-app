@@ -199,9 +199,21 @@ final class AuthViewModel: ObservableObject {
             Task { @MainActor in
                 switch result {
                 case .success(let user):
-                    self?.currentUser = user
-                    self?.updateBypassStatus(for: user)
-                    self?.markEmailVerifiedIfNeeded()
+                    UserService.shared.migrateLegacyUserIfNeeded(user) { migratedResult in
+                        Task { @MainActor in
+                            switch migratedResult {
+                            case .success(let migratedUser):
+                                self?.currentUser = migratedUser
+                                self?.updateBypassStatus(for: migratedUser)
+                                self?.markEmailVerifiedIfNeeded()
+                            case .failure(let migrationError):
+                                self?.currentUser = user
+                                self?.updateBypassStatus(for: user)
+                                self?.markEmailVerifiedIfNeeded()
+                                self?.errorMessage = migrationError.localizedDescription
+                            }
+                        }
+                    }
                 case .failure(let error):
                     self?.errorMessage = error.localizedDescription
                 }

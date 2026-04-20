@@ -16,6 +16,7 @@ final class FeedViewModel: ObservableObject {
     @Published var filter: FilterModel = FilterModel()
 
     private var likedUserIds: Set<String> = []
+    private var shortlistedUserIds: Set<String> = []
 
     var currentProfile: UserModel? {
         guard currentIndex < profiles.count else { return nil }
@@ -39,19 +40,25 @@ final class FeedViewModel: ObservableObject {
                 guard let self = self else { return }
                 self.likedUserIds = Set(likedIds)
 
-                UserService.shared.fetchFeedUsers(
-                    currentUser: currentUser,
-                    filter: self.filter,
-                    alreadySeen: Array(self.likedUserIds)
-                ) { result in
+                ShortlistService.shared.fetchShortlistedUserIds(fromUserId: uid) { shortlistIds in
                     Task { @MainActor in
-                        self.isLoading = false
-                        switch result {
-                        case .success(let users):
-                            self.profiles = users.shuffled()
-                            self.currentIndex = 0
-                        case .failure(let error):
-                            self.errorMessage = error.localizedDescription
+                        self.shortlistedUserIds = Set(shortlistIds)
+
+                        UserService.shared.fetchFeedUsers(
+                            currentUser: currentUser,
+                            filter: self.filter,
+                            alreadySeen: Array(self.likedUserIds)
+                        ) { result in
+                            Task { @MainActor in
+                                self.isLoading = false
+                                switch result {
+                                case .success(let users):
+                                    self.profiles = users.shuffled()
+                                    self.currentIndex = 0
+                                case .failure(let error):
+                                    self.errorMessage = error.localizedDescription
+                                }
+                            }
                         }
                     }
                 }
@@ -84,6 +91,35 @@ final class FeedViewModel: ObservableObject {
     // MARK: - Pass Profile
     func passCurrentProfile() {
         advance()
+    }
+
+    func isCurrentProfileShortlisted() -> Bool {
+        guard let id = currentProfile?.id else { return false }
+        return shortlistedUserIds.contains(id)
+    }
+
+    func toggleShortlistForCurrentProfile(currentUser: UserModel) {
+        guard let myId = currentUser.id,
+              let targetId = currentProfile?.id else { return }
+
+        let willShortlist = !shortlistedUserIds.contains(targetId)
+        ShortlistService.shared.setShortlisted(
+            fromUserId: myId,
+            toUserId: targetId,
+            isShortlisted: willShortlist
+        ) { [weak self] error in
+            Task { @MainActor in
+                guard error == nil else {
+                    self?.errorMessage = error?.localizedDescription
+                    return
+                }
+                if willShortlist {
+                    self?.shortlistedUserIds.insert(targetId)
+                } else {
+                    self?.shortlistedUserIds.remove(targetId)
+                }
+            }
+        }
     }
 
     // MARK: - Advance to next card

@@ -74,9 +74,11 @@ extension View {
 
 // MARK: - Color Extensions
 extension Color {
-    static let nikahGreen = Color(red: 0.13, green: 0.55, blue: 0.13)
-    static let nikahGold = Color(red: 0.85, green: 0.65, blue: 0.13)
-    static let nikahBackground = Color(.systemGroupedBackground)
+    static let nikahGreen = Color(red: 0.09, green: 0.43, blue: 0.28)
+    static let nikahGold = Color(red: 0.79, green: 0.58, blue: 0.22)
+    static let nikahMaroon = Color(red: 0.45, green: 0.17, blue: 0.18)
+    static let nikahCream = Color(red: 0.99, green: 0.96, blue: 0.90)
+    static let nikahBackground = Color(red: 0.98, green: 0.97, blue: 0.94)
 }
 
 // MARK: - Double Extensions

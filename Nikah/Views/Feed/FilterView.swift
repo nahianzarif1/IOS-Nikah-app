@@ -98,6 +98,57 @@ struct FilterView: View {
                     .pickerStyle(.segmented)
                 }
 
+                // MARK: Religious Preference
+                Section(header: Text("Religious Preference")) {
+                    Toggle("Verified profiles only", isOn: $localFilter.onlyVerified)
+                        .tint(.nikahGreen)
+
+                    Picker("Madhhab", selection: $localFilter.madhhab) {
+                        Text("Any Madhhab").tag("")
+                        Text("Hanafi").tag("hanafi")
+                        Text("Shafi'i").tag("shafii")
+                        Text("Maliki").tag("maliki")
+                        Text("Hanbali").tag("hanbali")
+                        Text("Salafi").tag("salafi")
+                        Text("Other").tag("other")
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Minimum Prayer/Day: \(localFilter.minPrayerPerDay)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Slider(
+                            value: Binding(
+                                get: { Double(localFilter.minPrayerPerDay) },
+                                set: { localFilter.minPrayerPerDay = Int($0) }
+                            ),
+                            in: 0...5,
+                            step: 1
+                        )
+                        .tint(.nikahGreen)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Minimum Deen Level: \(localFilter.minDeenLevel)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Slider(
+                            value: Binding(
+                                get: { Double(localFilter.minDeenLevel) },
+                                set: { localFilter.minDeenLevel = Int($0) }
+                            ),
+                            in: 1...5,
+                            step: 1
+                        )
+                        .tint(.nikahGreen)
+                    }
+
+                    Toggle("Require niqab in matches", isOn: $localFilter.requireNiqab)
+                        .tint(.nikahGreen)
+                }
+
                 // MARK: Profession
                 Section(header: Text("Profession")) {
                     TextField("Any profession", text: $localFilter.profession)
