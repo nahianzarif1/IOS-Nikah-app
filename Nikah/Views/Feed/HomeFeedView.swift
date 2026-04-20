@@ -54,11 +54,11 @@ struct HomeFeedView: View {
                     }
                 }
             }
-            .alert("It's a Match! 🎉", isPresented: $feedVM.matchAlert) {
+            .alert("Interest Matched", isPresented: $feedVM.matchAlert) {
                 Button("View Matches") {}
                 Button("Keep Swiping", role: .cancel) {}
             } message: {
-                Text("You and \(feedVM.matchedUserName) liked each other!")
+                Text("You and \(feedVM.matchedUserName) both expressed interest.")
             }
             .onAppear {
                 if let user = authVM.currentUser {
@@ -74,7 +74,7 @@ struct HomeFeedView: View {
             // Show next card behind
             if feedVM.currentIndex + 1 < feedVM.profiles.count {
                 let nextUser = feedVM.profiles[feedVM.currentIndex + 1]
-                ProfileCardView(user: nextUser, onLike: {}, onPass: {})
+                ProfileCardView(user: nextUser, onLike: {}, onPass: {}, onShortlist: {})
                     .padding(.horizontal, 24)
                     .scaleEffect(0.95)
                     .offset(y: 12)
@@ -89,8 +89,24 @@ struct HomeFeedView: View {
                     },
                     onPass: {
                         feedVM.passCurrentProfile()
+                    },
+                    onShortlist: {
+                        feedVM.toggleShortlistForCurrentProfile(currentUser: currentUser)
                     }
                 )
+                .overlay(alignment: .topLeading) {
+                    if feedVM.isCurrentProfileShortlisted() {
+                        Label("Shortlisted", systemImage: "star.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.nikahMaroon)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.nikahCream.opacity(0.95))
+                            .clipShape(Capsule())
+                            .padding(.top, 14)
+                            .padding(.leading, 14)
+                    }
+                }
                 .padding(.horizontal, 16)
                 .id(feedVM.currentIndex)
                 .transition(.asymmetric(
@@ -126,7 +142,7 @@ struct HomeFeedView: View {
                         .environmentObject(authVM)
                 }
             } label: {
-                Text("Complete Profile")
+                Text("Complete Biodata")
                     .nikahButton()
                     .padding(.horizontal, 40)
             }

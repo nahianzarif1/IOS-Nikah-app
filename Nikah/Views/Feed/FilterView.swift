@@ -98,6 +98,28 @@ struct FilterView: View {
                     .pickerStyle(.segmented)
                 }
 
+                // MARK: Religious Preference
+                Section(header: Text("Religious Preference")) {
+                    Toggle("Verified profiles only", isOn: $localFilter.onlyVerified)
+                        .tint(.nikahGreen)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Minimum Prayer/Day: \(localFilter.minPrayerPerDay)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Slider(
+                            value: Binding(
+                                get: { Double(localFilter.minPrayerPerDay) },
+                                set: { localFilter.minPrayerPerDay = Int($0) }
+                            ),
+                            in: 0...5,
+                            step: 1
+                        )
+                        .tint(.nikahGreen)
+                    }
+                }
+
                 // MARK: Profession
                 Section(header: Text("Profession")) {
                     TextField("Any profession", text: $localFilter.profession)

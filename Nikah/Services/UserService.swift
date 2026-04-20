@@ -84,6 +84,11 @@ final class UserService {
                 if user.blockedUsers.contains(currentUser.id ?? "") { return false }
                 if user.age < filter.minAge || user.age > filter.maxAge { return false }
                 if user.height < filter.minHeight || user.height > filter.maxHeight { return false }
+                if filter.onlyVerified && !user.isVerified { return false }
+                if filter.minPrayerPerDay > 0 {
+                    let prayerCount = Int(user.prayerFrequency) ?? 0
+                    if prayerCount < filter.minPrayerPerDay { return false }
+                }
                 if !filter.education.isEmpty &&
                    !user.education.localizedCaseInsensitiveContains(filter.education) { return false }
                 if !filter.profession.isEmpty &&

@@ -178,6 +178,19 @@ struct EditProfileView: View {
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.numberPad)
                     }
+                    HStack {
+                        Text("Guardian/Wali")
+                        Spacer()
+                        TextField("Name", text: $profileVM.user.guardianName)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    HStack {
+                        Text("Guardian Contact")
+                        Spacer()
+                        TextField("Phone", text: $profileVM.user.guardianContact)
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.phonePad)
+                    }
                     if profileVM.user.gender == "male" {
                         Toggle("Has Beard", isOn: $profileVM.user.beard).tint(.nikahGreen)
                     }

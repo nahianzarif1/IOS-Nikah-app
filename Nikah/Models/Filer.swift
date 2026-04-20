@@ -11,6 +11,8 @@ struct FilterModel: Codable {
     var maritalStatus: String
     var minHeight: Double
     var maxHeight: Double
+    var onlyVerified: Bool
+    var minPrayerPerDay: Int
 
     init(
         district: String = "",
@@ -20,7 +22,9 @@ struct FilterModel: Codable {
         education: String = "",
         maritalStatus: String = "",
         minHeight: Double = 4.0,
-        maxHeight: Double = 7.0
+        maxHeight: Double = 7.0,
+        onlyVerified: Bool = false,
+        minPrayerPerDay: Int = 0
     ) {
         self.district = district
         self.minAge = minAge
@@ -30,6 +34,8 @@ struct FilterModel: Codable {
         self.maritalStatus = maritalStatus
         self.minHeight = minHeight
         self.maxHeight = maxHeight
+        self.onlyVerified = onlyVerified
+        self.minPrayerPerDay = minPrayerPerDay
     }
 
     var isDefault: Bool {
@@ -40,7 +46,9 @@ struct FilterModel: Codable {
         education.isEmpty &&
         maritalStatus.isEmpty &&
         minHeight == 4.0 &&
-        maxHeight == 7.0
+        maxHeight == 7.0 &&
+        !onlyVerified &&
+        minPrayerPerDay == 0
     }
 }
 

@@ -9,6 +9,7 @@ struct ProfileCardView: View {
     let user: UserModel
     let onLike: () -> Void
     let onPass: () -> Void
+    let onShortlist: () -> Void
     @State private var showDetail = false
     @State private var dragOffset: CGSize = .zero
     @State private var cardRotation: Double = 0
@@ -17,8 +18,14 @@ struct ProfileCardView: View {
         ZStack {
             // MARK: Card Background
             RoundedRectangle(cornerRadius: 24)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.15), radius: 16, x: 0, y: 8)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.white, Color.nikahCream.opacity(0.7)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .shadow(color: Color.nikahMaroon.opacity(0.15), radius: 16, x: 0, y: 8)
 
             VStack(spacing: 0) {
                 // MARK: Photo
@@ -37,10 +44,18 @@ struct ProfileCardView: View {
                         Spacer()
                         if user.isVerified {
                             Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(Color.nikahGreen)
                                 .font(.title3)
                         }
                     }
+
+                    Text("Biodata")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.nikahMaroon)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.nikahCream)
+                        .clipShape(Capsule())
 
                     Label(user.district, systemImage: "mappin.circle.fill")
                         .font(.subheadline)
@@ -78,6 +93,17 @@ struct ProfileCardView: View {
                             }
                         }
 
+                        Button(action: onShortlist) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.nikahGold.opacity(0.16))
+                                    .frame(width: 48, height: 48)
+                                Image(systemName: "star.fill")
+                                    .font(.title3)
+                                    .foregroundColor(Color.nikahMaroon)
+                            }
+                        }
+
                         Spacer()
 
                         // Like button
@@ -86,12 +112,17 @@ struct ProfileCardView: View {
                                 Circle()
                                     .fill(Color.nikahGreen.opacity(0.1))
                                     .frame(width: 60, height: 60)
-                                Text("❤️")
-                                    .font(.system(size: 28))
+                                Image(systemName: "heart.fill")
+                                    .font(.system(size: 24, weight: .semibold))
+                                    .foregroundColor(.nikahGreen)
                             }
                         }
                     }
                     .padding(.top, 4)
+
+                    Text("Swipe right to express interest")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
                 .padding(16)
             }

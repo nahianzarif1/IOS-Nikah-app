@@ -34,6 +34,10 @@ final class FirebaseManager {
         firestore.collection("reports")
     }
 
+    var shortlistsCollection: CollectionReference {
+        firestore.collection("shortlists")
+    }
+
     func messagesCollection(matchId: String) -> CollectionReference {
         firestore.collection("matches").document(matchId).collection("messages")
     }

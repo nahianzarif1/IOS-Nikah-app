@@ -8,6 +8,7 @@ struct ChatDetailView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @StateObject private var chatVM = ChatViewModel()
     @State private var messageText: String = ""
+    @State private var showVoiceNoteInfo = false
     @FocusState private var isInputFocused: Bool
 
     var body: some View {
@@ -40,6 +41,17 @@ struct ChatDetailView: View {
 
             // MARK: Input Bar
             HStack(spacing: 10) {
+                Button {
+                    showVoiceNoteInfo = true
+                } label: {
+                    Image(systemName: "mic.fill")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.nikahMaroon)
+                        .frame(width: 38, height: 38)
+                        .background(Color.nikahCream)
+                        .clipShape(Circle())
+                }
+
                 TextField("Type a message...", text: $messageText, axis: .vertical)
                     .lineLimit(1...5)
                     .padding(.horizontal, 14)
@@ -94,6 +106,11 @@ struct ChatDetailView: View {
             if let matchId = match.id {
                 chatVM.startListeningToMessages(matchId: matchId)
             }
+        }
+        .alert("Voice Notes", isPresented: $showVoiceNoteInfo) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Voice note messaging is in progress and will be available in an upcoming update.")
         }
         .onDisappear {
             chatVM.stopListening()

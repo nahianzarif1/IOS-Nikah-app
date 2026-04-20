@@ -21,6 +21,8 @@ struct UserModel: Identifiable, Codable, Equatable {
     var maritalStatus: String
     var religion: String
     var prayerFrequency: String
+    var guardianName: String
+    var guardianContact: String
     var beard: Bool
     var hijab: Bool
     var height: Double
@@ -50,6 +52,8 @@ struct UserModel: Identifiable, Codable, Equatable {
         case maritalStatus
         case religion
         case prayerFrequency
+        case guardianName
+        case guardianContact
         case beard
         case hijab
         case height
@@ -80,6 +84,8 @@ struct UserModel: Identifiable, Codable, Equatable {
         maritalStatus: String = "unmarried",
         religion: String = "Islam",
         prayerFrequency: String = "",
+        guardianName: String = "",
+        guardianContact: String = "",
         beard: Bool = false,
         hijab: Bool = false,
         height: Double = 0,
@@ -108,6 +114,8 @@ struct UserModel: Identifiable, Codable, Equatable {
         self.maritalStatus = maritalStatus
         self.religion = religion
         self.prayerFrequency = prayerFrequency
+        self.guardianName = guardianName
+        self.guardianContact = guardianContact
         self.beard = beard
         self.hijab = hijab
         self.height = height
@@ -162,6 +170,8 @@ struct UserModel: Identifiable, Codable, Equatable {
             maritalStatus: data["maritalStatus"] as? String ?? "unmarried",
             religion: data["religion"] as? String ?? "Islam",
             prayerFrequency: data["prayerFrequency"] as? String ?? "",
+            guardianName: data["guardianName"] as? String ?? "",
+            guardianContact: data["guardianContact"] as? String ?? "",
             beard: data["beard"] as? Bool ?? false,
             hijab: data["hijab"] as? Bool ?? false,
             height: data["height"] as? Double ?? 0,
@@ -194,6 +204,8 @@ struct UserModel: Identifiable, Codable, Equatable {
             "maritalStatus": maritalStatus,
             "religion": religion,
             "prayerFrequency": prayerFrequency,
+            "guardianName": guardianName,
+            "guardianContact": guardianContact,
             "beard": beard,
             "hijab": hijab,
             "height": height,

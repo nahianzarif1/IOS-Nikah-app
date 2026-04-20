@@ -83,6 +83,11 @@ struct ProfileDetailView: View {
                         }
                     }
 
+                    DetailCard(title: "Guardian/Wali", icon: "person.2.fill") {
+                        InfoRow(label: "Name", value: user.guardianName)
+                        InfoRow(label: "Contact", value: user.guardianContact)
+                    }
+
                     // MARK: Safety Actions
                     VStack(spacing: 8) {
                         Button {

@@ -146,6 +146,9 @@ struct CreateProfileView: View {
             FormPickerField(label: "Religion", selection: $profileVM.user.religion, options: ["Islam", "Other"])
             FormTextField(label: "Prayer Frequency (per day)", placeholder: "e.g. 5", text: $profileVM.user.prayerFrequency)
                 .keyboardType(.numberPad)
+            FormTextField(label: "Guardian/Wali Name", placeholder: "e.g. Father/Brother/Guardian", text: $profileVM.user.guardianName)
+            FormTextField(label: "Guardian Contact", placeholder: "Phone number", text: $profileVM.user.guardianContact)
+                .keyboardType(.phonePad)
 
             if profileVM.user.gender == "male" {
                 Toggle(isOn: $profileVM.user.beard) {
