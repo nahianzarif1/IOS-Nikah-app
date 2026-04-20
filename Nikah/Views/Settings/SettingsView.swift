@@ -168,7 +168,7 @@ struct PrivacyView: View {
                 }
 
                 Section(header: Text("Your Data")) {
-                    Label("Only matched users can message you", systemImage: "lock.fill")
+                    Label("Direct chat is disabled in guardian-only mode", systemImage: "lock.fill")
                     Label("Your profile is only shown to opposite gender", systemImage: "eye.fill")
                 }
             }

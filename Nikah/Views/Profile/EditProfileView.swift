@@ -171,6 +171,15 @@ struct EditProfileView: View {
                         Text("Islam").tag("Islam")
                         Text("Other").tag("Other")
                     }
+                    Picker("Madhhab", selection: $profileVM.user.madhhab) {
+                        Text("Not set").tag("")
+                        Text("Hanafi").tag("hanafi")
+                        Text("Shafi'i").tag("shafii")
+                        Text("Maliki").tag("maliki")
+                        Text("Hanbali").tag("hanbali")
+                        Text("Salafi").tag("salafi")
+                        Text("Other").tag("other")
+                    }
                     HStack {
                         Text("Prayer Frequency")
                         Spacer()
@@ -178,11 +187,26 @@ struct EditProfileView: View {
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.numberPad)
                     }
+                    Stepper("Deen Level: \(profileVM.user.deenLevel)/5", value: $profileVM.user.deenLevel, in: 1...5)
+                    HStack {
+                        Text("Guardian/Wali")
+                        Spacer()
+                        TextField("Name", text: $profileVM.user.guardianName)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    HStack {
+                        Text("Guardian Contact")
+                        Spacer()
+                        TextField("Phone", text: $profileVM.user.guardianContact)
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.phonePad)
+                    }
                     if profileVM.user.gender == "male" {
                         Toggle("Has Beard", isOn: $profileVM.user.beard).tint(.nikahGreen)
                     }
                     if profileVM.user.gender == "female" {
                         Toggle("Wears Hijab", isOn: $profileVM.user.hijab).tint(.nikahGreen)
+                        Toggle("Wears Niqab", isOn: $profileVM.user.niqab).tint(.nikahGreen)
                     }
                 }
 

@@ -15,6 +15,8 @@ struct CreateProfileView: View {
         _profileVM = StateObject(wrappedValue: ProfileViewModel(user: user))
     }
 
+
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -142,8 +144,23 @@ struct CreateProfileView: View {
     private var religiousSection: some View {
         SectionCard(title: "Religious Information") {
             FormPickerField(label: "Religion", selection: $profileVM.user.religion, options: ["Islam", "Other"])
+            FormPickerField(label: "Madhhab", selection: $profileVM.user.madhhab, options: ["hanafi", "shafii", "maliki", "hanbali", "salafi", "other"])
             FormTextField(label: "Prayer Frequency (per day)", placeholder: "e.g. 5", text: $profileVM.user.prayerFrequency)
                 .keyboardType(.numberPad)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Deen Level: \(profileVM.user.deenLevel)/5")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                Slider(value: Binding(
+                    get: { Double(profileVM.user.deenLevel) },
+                    set: { profileVM.user.deenLevel = Int($0) }
+                ), in: 1...5, step: 1)
+                .tint(.nikahGreen)
+            }
+            FormTextField(label: "Guardian/Wali Name", placeholder: "e.g. Father/Brother/Guardian", text: $profileVM.user.guardianName)
+            FormTextField(label: "Guardian Contact", placeholder: "Phone number", text: $profileVM.user.guardianContact)
+                .keyboardType(.phonePad)
 
             if profileVM.user.gender == "male" {
                 Toggle(isOn: $profileVM.user.beard) {
@@ -155,6 +172,12 @@ struct CreateProfileView: View {
             if profileVM.user.gender == "female" {
                 Toggle(isOn: $profileVM.user.hijab) {
                     Label("Wears hijab", systemImage: "person.fill")
+                        .font(.subheadline)
+                }
+                .tint(.nikahGreen)
+
+                Toggle(isOn: $profileVM.user.niqab) {
+                    Label("Wears niqab", systemImage: "person.fill")
                         .font(.subheadline)
                 }
                 .tint(.nikahGreen)

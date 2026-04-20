@@ -40,6 +40,52 @@ final class UserService {
         }
     }
 
+    // MARK: - Legacy User Migration
+    func migrateLegacyUserIfNeeded(_ user: UserModel, completion: @escaping (Result<UserModel, Error>) -> Void) {
+        guard let uid = user.id else {
+            completion(.failure(NSError(domain: "UserService", code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "User ID missing"])) )
+            return
+        }
+
+        var updatedUser = user
+        var didChange = false
+
+        if updatedUser.madhhab.isEmpty {
+            updatedUser.madhhab = ""
+            didChange = true
+        }
+        if updatedUser.deenLevel < 1 {
+            updatedUser.deenLevel = 1
+            didChange = true
+        }
+        if updatedUser.prayerFrequency.isEmpty {
+            updatedUser.prayerFrequency = "0"
+            didChange = true
+        }
+        if updatedUser.guardianName.isEmpty {
+            updatedUser.guardianName = ""
+            didChange = true
+        }
+        if updatedUser.guardianContact.isEmpty {
+            updatedUser.guardianContact = ""
+            didChange = true
+        }
+
+        if !didChange {
+            completion(.success(user))
+            return
+        }
+
+        manager.usersCollection.document(uid).setData(updatedUser.toFirestoreData(), merge: true) { error in
+            if let error {
+                completion(.failure(error))
+            } else {
+                completion(.success(updatedUser))
+            }
+        }
+    }
+
     // MARK: - Update Last Active
     func updateLastActive(uid: String) {
         manager.usersCollection.document(uid).updateData(["lastActive": Timestamp(date: Date())])
@@ -84,6 +130,14 @@ final class UserService {
                 if user.blockedUsers.contains(currentUser.id ?? "") { return false }
                 if user.age < filter.minAge || user.age > filter.maxAge { return false }
                 if user.height < filter.minHeight || user.height > filter.maxHeight { return false }
+                     if filter.onlyVerified && !user.isVerified { return false }
+                     if filter.minPrayerPerDay > 0 {
+                          let prayerCount = Int(user.prayerFrequency) ?? 0
+                          if prayerCount < filter.minPrayerPerDay { return false }
+                     }
+                     if !filter.madhhab.isEmpty && user.madhhab.lowercased() != filter.madhhab.lowercased() { return false }
+                     if user.deenLevel < filter.minDeenLevel { return false }
+                     if filter.requireNiqab && !user.niqab { return false }
                 if !filter.education.isEmpty &&
                    !user.education.localizedCaseInsensitiveContains(filter.education) { return false }
                 if !filter.profession.isEmpty &&
