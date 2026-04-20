@@ -280,8 +280,15 @@ struct CommunityHubView: View {
 
             if vm.isLoading {
                 Spacer()
-                ProgressView("Loading posts...")
+                VStack(spacing: 12) {
+                    ProgressView()
+                    Text("Loading community posts...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
                 Spacer()
+            } else if vm.posts.isEmpty {
+                emptyCommunityState
             } else {
                 List(vm.posts) { post in
                     VStack(alignment: .leading, spacing: 4) {
@@ -298,6 +305,23 @@ struct CommunityHubView: View {
                 .listStyle(.plain)
             }
         }
+    }
+
+    private var emptyCommunityState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "person.3.sequence.fill")
+                .font(.system(size: 44))
+                .foregroundColor(.secondary.opacity(0.5))
+            Text("No community posts yet")
+                .font(.headline)
+            Text("Be the first to share a helpful note or ask a marriage-related question.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.vertical, 24)
     }
 
     private var supportSection: some View {
@@ -325,6 +349,10 @@ struct CommunityHubView: View {
                     Text("Submit Ticket")
                         .nikahButton()
                 }
+
+                Text("We usually respond to tickets through app updates and backend review.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
             .padding()
         }
@@ -336,6 +364,18 @@ struct CommunityHubView: View {
                 StatCard(title: "Success Stories", value: "\(vm.successStoriesCount)", subtitle: "Verified outcomes shared")
                 StatCard(title: "Total Members", value: "\(vm.usersCount)", subtitle: "Biodata profiles available")
                 StatCard(title: "Accepted Matches", value: "\(vm.matchesCount)", subtitle: "Families connected")
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Trust Snapshot")
+                        .font(.headline)
+                    Text("This dashboard is meant to show the platform's marriage success activity at a glance.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(14)
             }
             .padding()
         }
