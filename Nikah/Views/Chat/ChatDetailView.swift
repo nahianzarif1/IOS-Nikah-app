@@ -18,6 +18,9 @@ struct ChatDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            if AppConstants.strictGuardianOnlyCommunication {
+                guardianOnlyView
+            } else {
             // MARK: Message List
             ScrollViewReader { proxy in
                 ScrollView {
@@ -87,6 +90,7 @@ struct ChatDetailView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background(Color(.systemBackground))
+            }
         }
         .navigationTitle(otherUser.displayName)
         .navigationBarTitleDisplayMode(.inline)
@@ -138,6 +142,59 @@ struct ChatDetailView: View {
               let senderId = authVM.currentUser?.id else { return }
         chatVM.sendMessage(matchId: matchId, senderId: senderId, text: messageText)
         messageText = ""
+    }
+
+    private var guardianOnlyView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "shield.lefthalf.filled")
+                .font(.system(size: 54))
+                .foregroundColor(.nikahGreen)
+                .padding(.top, 20)
+
+            Text("Guardian-Only Communication")
+                .font(.title3)
+                .fontWeight(.bold)
+
+            Text("Direct chat is disabled to maintain a Sharia-compliant flow. Please contact the guardian/wali first.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+
+            VStack(spacing: 8) {
+                HStack {
+                    Text("Guardian")
+                    Spacer()
+                    Text(otherUser.guardianName.isEmpty ? "Not provided" : otherUser.guardianName)
+                        .foregroundColor(.secondary)
+                }
+                HStack {
+                    Text("Contact")
+                    Spacer()
+                    Text(otherUser.guardianContact.isEmpty ? "Not provided" : otherUser.guardianContact)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(14)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+            .padding(.horizontal, 20)
+
+            if !otherUser.guardianContact.isEmpty {
+                Button {
+                    let phone = otherUser.guardianContact.filter { "0123456789+".contains($0) }
+                    if let url = URL(string: "tel://\(phone)") {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    Label("Contact Guardian", systemImage: "phone.fill")
+                        .nikahButton()
+                        .padding(.horizontal, 20)
+                }
+            }
+
+            Spacer()
+        }
     }
 
     private func handleMicTap() {

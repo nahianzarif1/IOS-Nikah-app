@@ -130,7 +130,7 @@ struct HomeFeedView: View {
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Text("Please add your photo, district, and age to access the feed.")
+            Text("Please add your photo, district, age, and guardian contact to access the feed.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

@@ -13,6 +13,9 @@ struct FilterModel: Codable {
     var maxHeight: Double
     var onlyVerified: Bool
     var minPrayerPerDay: Int
+    var madhhab: String
+    var minDeenLevel: Int
+    var requireNiqab: Bool
 
     init(
         district: String = "",
@@ -24,7 +27,10 @@ struct FilterModel: Codable {
         minHeight: Double = 4.0,
         maxHeight: Double = 7.0,
         onlyVerified: Bool = false,
-        minPrayerPerDay: Int = 0
+        minPrayerPerDay: Int = 0,
+        madhhab: String = "",
+        minDeenLevel: Int = 1,
+        requireNiqab: Bool = false
     ) {
         self.district = district
         self.minAge = minAge
@@ -36,6 +42,9 @@ struct FilterModel: Codable {
         self.maxHeight = maxHeight
         self.onlyVerified = onlyVerified
         self.minPrayerPerDay = minPrayerPerDay
+        self.madhhab = madhhab
+        self.minDeenLevel = minDeenLevel
+        self.requireNiqab = requireNiqab
     }
 
     var isDefault: Bool {
@@ -48,7 +57,10 @@ struct FilterModel: Codable {
         minHeight == 4.0 &&
         maxHeight == 7.0 &&
         !onlyVerified &&
-        minPrayerPerDay == 0
+        minPrayerPerDay == 0 &&
+        madhhab.isEmpty &&
+        minDeenLevel == 1 &&
+        !requireNiqab
     }
 }
 

@@ -89,6 +89,12 @@ struct MainTabView: View {
                     Label("Messages", systemImage: "bubble.left.and.bubble.right.fill")
                 }
 
+            CommunityHubView()
+                .environmentObject(authVM)
+                .tabItem {
+                    Label("Community", systemImage: "person.3.fill")
+                }
+
             SettingsView()
                 .environmentObject(authVM)
                 .tabItem {
@@ -96,6 +102,267 @@ struct MainTabView: View {
                 }
         }
         .tint(.nikahGreen)
+    }
+}
+
+struct CommunityPostModel: Identifiable {
+    let id: String
+    let authorName: String
+    let body: String
+    let createdAt: Date
+
+    static func fromDocument(_ document: DocumentSnapshot) -> CommunityPostModel? {
+        guard let data = document.data() else { return nil }
+        return CommunityPostModel(
+            id: document.documentID,
+            authorName: data["authorName"] as? String ?? "Member",
+            body: data["body"] as? String ?? "",
+            createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
+        )
+    }
+}
+
+@MainActor
+final class CommunityHubViewModel: ObservableObject {
+    @Published var posts: [CommunityPostModel] = []
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    @Published var newPostText = ""
+    @Published var supportMessage = ""
+    @Published var successStoriesCount = 0
+    @Published var usersCount = 0
+    @Published var matchesCount = 0
+
+    private let manager = FirebaseManager.shared
+
+    func loadAll() {
+        loadCommunityPosts()
+        loadSuccessStats()
+    }
+
+    func loadCommunityPosts() {
+        isLoading = true
+        manager.communityPostsCollection
+            .order(by: "createdAt", descending: true)
+            .limit(to: 40)
+            .getDocuments { [weak self] snapshot, error in
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    self.isLoading = false
+                    if let error {
+                        self.errorMessage = error.localizedDescription
+                        return
+                    }
+                    self.posts = snapshot?.documents.compactMap(CommunityPostModel.fromDocument) ?? []
+                }
+            }
+    }
+
+    func createPost(authorName: String) {
+        let body = newPostText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !body.isEmpty else { return }
+
+        manager.communityPostsCollection.addDocument(data: [
+            "authorName": authorName,
+            "body": body,
+            "createdAt": Timestamp(date: Date())
+        ]) { [weak self] error in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if let error {
+                    self.errorMessage = error.localizedDescription
+                    return
+                }
+                self.newPostText = ""
+                self.loadCommunityPosts()
+            }
+        }
+    }
+
+    func submitSupportTicket(userId: String) {
+        let message = supportMessage.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !message.isEmpty else { return }
+
+        manager.supportTicketsCollection.addDocument(data: [
+            "userId": userId,
+            "message": message,
+            "status": "open",
+            "createdAt": Timestamp(date: Date())
+        ]) { [weak self] error in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if let error {
+                    self.errorMessage = error.localizedDescription
+                    return
+                }
+                self.supportMessage = ""
+            }
+        }
+    }
+
+    private func loadSuccessStats() {
+        manager.successStoriesCollection.getDocuments { [weak self] snapshot, _ in
+            Task { @MainActor [weak self] in
+                self?.successStoriesCount = snapshot?.documents.count ?? 0
+            }
+        }
+
+        manager.usersCollection.getDocuments { [weak self] snapshot, _ in
+            Task { @MainActor [weak self] in
+                self?.usersCount = snapshot?.documents.count ?? 0
+            }
+        }
+
+        manager.matchesCollection.getDocuments { [weak self] snapshot, _ in
+            Task { @MainActor [weak self] in
+                self?.matchesCount = snapshot?.documents.count ?? 0
+            }
+        }
+    }
+}
+
+struct CommunityHubView: View {
+    @EnvironmentObject var authVM: AuthViewModel
+    @StateObject private var vm = CommunityHubViewModel()
+    @State private var selectedSection = 0
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 12) {
+                Picker("Hub", selection: $selectedSection) {
+                    Text("Community").tag(0)
+                    Text("Support").tag(1)
+                    Text("Success").tag(2)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+
+                if selectedSection == 0 {
+                    communitySection
+                } else if selectedSection == 1 {
+                    supportSection
+                } else {
+                    successSection
+                }
+            }
+            .navigationTitle("Community Hub")
+            .navigationBarTitleDisplayMode(.inline)
+            .alert("Error", isPresented: Binding(
+                get: { vm.errorMessage != nil },
+                set: { if !$0 { vm.errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(vm.errorMessage ?? "Unknown error")
+            }
+            .onAppear {
+                vm.loadAll()
+            }
+        }
+    }
+
+    private var communitySection: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 8) {
+                TextField("Share a community note...", text: $vm.newPostText, axis: .vertical)
+                    .lineLimit(1...3)
+                    .padding(10)
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(10)
+
+                Button("Post") {
+                    vm.createPost(authorName: authVM.currentUser?.displayName.isEmpty == false ? authVM.currentUser?.displayName ?? "Member" : "Member")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.nikahGreen)
+            }
+            .padding(.horizontal)
+
+            if vm.isLoading {
+                Spacer()
+                ProgressView("Loading posts...")
+                Spacer()
+            } else {
+                List(vm.posts) { post in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(post.authorName)
+                            .font(.headline)
+                        Text(post.body)
+                            .font(.subheadline)
+                        Text(post.createdAt.timeAgoDisplay)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                }
+                .listStyle(.plain)
+            }
+        }
+    }
+
+    private var supportSection: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Support Team")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+
+                Text("Report any issue and our team will review your ticket.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+
+                TextEditor(text: $vm.supportMessage)
+                    .frame(height: 140)
+                    .padding(8)
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(12)
+
+                Button {
+                    if let myId = authVM.currentUser?.id {
+                        vm.submitSupportTicket(userId: myId)
+                    }
+                } label: {
+                    Text("Submit Ticket")
+                        .nikahButton()
+                }
+            }
+            .padding()
+        }
+    }
+
+    private var successSection: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                StatCard(title: "Success Stories", value: "\(vm.successStoriesCount)", subtitle: "Verified outcomes shared")
+                StatCard(title: "Total Members", value: "\(vm.usersCount)", subtitle: "Biodata profiles available")
+                StatCard(title: "Accepted Matches", value: "\(vm.matchesCount)", subtitle: "Families connected")
+            }
+            .padding()
+        }
+    }
+}
+
+private struct StatCard: View {
+    let title: String
+    let value: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            Text(value)
+                .font(.system(size: 28, weight: .bold))
+                .foregroundColor(.nikahMaroon)
+            Text(subtitle)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(Color.nikahCream)
+        .cornerRadius(14)
     }
 }
 

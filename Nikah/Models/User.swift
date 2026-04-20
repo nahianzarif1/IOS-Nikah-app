@@ -20,11 +20,14 @@ struct UserModel: Identifiable, Codable, Equatable {
     var profession: String
     var maritalStatus: String
     var religion: String
+    var madhhab: String
+    var deenLevel: Int
     var prayerFrequency: String
     var guardianName: String
     var guardianContact: String
     var beard: Bool
     var hijab: Bool
+    var niqab: Bool
     var height: Double
     var weight: Double
     var photos: [String]          // Array of Cloudinary URLs
@@ -51,11 +54,14 @@ struct UserModel: Identifiable, Codable, Equatable {
         case profession
         case maritalStatus
         case religion
+        case madhhab
+        case deenLevel
         case prayerFrequency
         case guardianName
         case guardianContact
         case beard
         case hijab
+        case niqab
         case height
         case weight
         case photos
@@ -83,11 +89,14 @@ struct UserModel: Identifiable, Codable, Equatable {
         profession: String = "",
         maritalStatus: String = "unmarried",
         religion: String = "Islam",
+        madhhab: String = "",
+        deenLevel: Int = 1,
         prayerFrequency: String = "",
         guardianName: String = "",
         guardianContact: String = "",
         beard: Bool = false,
         hijab: Bool = false,
+        niqab: Bool = false,
         height: Double = 0,
         weight: Double = 0,
         photos: [String] = [],
@@ -113,11 +122,14 @@ struct UserModel: Identifiable, Codable, Equatable {
         self.profession = profession
         self.maritalStatus = maritalStatus
         self.religion = religion
+        self.madhhab = madhhab
+        self.deenLevel = deenLevel
         self.prayerFrequency = prayerFrequency
         self.guardianName = guardianName
         self.guardianContact = guardianContact
         self.beard = beard
         self.hijab = hijab
+        self.niqab = niqab
         self.height = height
         self.weight = weight
         self.photos = photos
@@ -133,7 +145,7 @@ struct UserModel: Identifiable, Codable, Equatable {
     }
 
     var isProfileReady: Bool {
-        !photos.isEmpty && !district.isEmpty && age > 0
+        !photos.isEmpty && !district.isEmpty && age > 0 && !guardianContact.isEmpty
     }
 
     static func == (lhs: UserModel, rhs: UserModel) -> Bool {
@@ -169,11 +181,14 @@ struct UserModel: Identifiable, Codable, Equatable {
             profession: data["profession"] as? String ?? "",
             maritalStatus: data["maritalStatus"] as? String ?? "unmarried",
             religion: data["religion"] as? String ?? "Islam",
+            madhhab: data["madhhab"] as? String ?? "",
+            deenLevel: data["deenLevel"] as? Int ?? 1,
             prayerFrequency: data["prayerFrequency"] as? String ?? "",
             guardianName: data["guardianName"] as? String ?? "",
             guardianContact: data["guardianContact"] as? String ?? "",
             beard: data["beard"] as? Bool ?? false,
             hijab: data["hijab"] as? Bool ?? false,
+            niqab: data["niqab"] as? Bool ?? false,
             height: data["height"] as? Double ?? 0,
             weight: data["weight"] as? Double ?? 0,
             photos: data["photos"] as? [String] ?? [],
@@ -203,11 +218,14 @@ struct UserModel: Identifiable, Codable, Equatable {
             "profession": profession,
             "maritalStatus": maritalStatus,
             "religion": religion,
+            "madhhab": madhhab,
+            "deenLevel": deenLevel,
             "prayerFrequency": prayerFrequency,
             "guardianName": guardianName,
             "guardianContact": guardianContact,
             "beard": beard,
             "hijab": hijab,
+            "niqab": niqab,
             "height": height,
             "weight": weight,
             "photos": photos,

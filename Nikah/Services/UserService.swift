@@ -89,6 +89,9 @@ final class UserService {
                     let prayerCount = Int(user.prayerFrequency) ?? 0
                     if prayerCount < filter.minPrayerPerDay { return false }
                 }
+                if !filter.madhhab.isEmpty && user.madhhab.lowercased() != filter.madhhab.lowercased() { return false }
+                if user.deenLevel < filter.minDeenLevel { return false }
+                if filter.requireNiqab && !user.niqab { return false }
                 if !filter.education.isEmpty &&
                    !user.education.localizedCaseInsensitiveContains(filter.education) { return false }
                 if !filter.profession.isEmpty &&
