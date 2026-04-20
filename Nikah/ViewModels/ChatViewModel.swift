@@ -4,6 +4,7 @@ import Foundation
 import SwiftUI
 import Combine
 import FirebaseFirestore
+import AVFoundation
 
 @MainActor
 final class ChatViewModel: ObservableObject {
@@ -81,6 +82,32 @@ final class ChatViewModel: ObservableObject {
         ChatService.shared.sendMessage(message) { error in
             if let error = error {
                 print("Send message error: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func sendVoiceMessage(matchId: String, senderId: String, fileURL: URL, completion: ((Bool) -> Void)? = nil) {
+        let asset = AVURLAsset(url: fileURL)
+        let duration = CMTimeGetSeconds(asset.duration)
+
+        CloudinaryService.uploadAudio(fileURL: fileURL) { audioURL in
+            guard let audioURL else {
+                completion?(false)
+                return
+            }
+
+            let message = MessageModel(
+                matchId: matchId,
+                senderId: senderId,
+                text: "Voice note",
+                messageType: "voice",
+                audioURL: audioURL,
+                audioDuration: duration.isFinite ? duration : nil,
+                timestamp: Date()
+            )
+
+            ChatService.shared.sendMessage(message) { error in
+                completion?(error == nil)
             }
         }
     }

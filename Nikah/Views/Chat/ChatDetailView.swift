@@ -1,6 +1,7 @@
 // Views/Chat/ChatDetailView.swift
 
 import SwiftUI
+import AVFoundation
 
 struct ChatDetailView: View {
     let match: MatchModel
@@ -8,7 +9,11 @@ struct ChatDetailView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @StateObject private var chatVM = ChatViewModel()
     @State private var messageText: String = ""
-    @State private var showVoiceNoteInfo = false
+    @State private var audioRecorder: AVAudioRecorder?
+    @State private var recordingURL: URL?
+    @State private var isRecording = false
+    @State private var isUploadingVoice = false
+    @State private var voiceErrorMessage: String?
     @FocusState private var isInputFocused: Bool
 
     var body: some View {
@@ -42,15 +47,16 @@ struct ChatDetailView: View {
             // MARK: Input Bar
             HStack(spacing: 10) {
                 Button {
-                    showVoiceNoteInfo = true
+                    handleMicTap()
                 } label: {
-                    Image(systemName: "mic.fill")
+                    Image(systemName: isRecording ? "stop.fill" : "mic.fill")
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.nikahMaroon)
+                        .foregroundColor(isRecording ? .white : .nikahMaroon)
                         .frame(width: 38, height: 38)
-                        .background(Color.nikahCream)
+                        .background(isRecording ? Color.red : Color.nikahCream)
                         .clipShape(Circle())
                 }
+                .disabled(isUploadingVoice)
 
                 TextField("Type a message...", text: $messageText, axis: .vertical)
                     .lineLimit(1...5)
@@ -59,6 +65,12 @@ struct ChatDetailView: View {
                     .background(Color(.systemGray6))
                     .cornerRadius(20)
                     .focused($isInputFocused)
+                    .disabled(isRecording || isUploadingVoice)
+
+                if isUploadingVoice {
+                    ProgressView()
+                        .frame(width: 42, height: 42)
+                }
 
                 Button {
                     sendMessage()
@@ -70,7 +82,7 @@ struct ChatDetailView: View {
                         .background(messageText.trimmed.isEmpty ? Color(.systemGray4) : Color.nikahGreen)
                         .clipShape(Circle())
                 }
-                .disabled(messageText.trimmed.isEmpty)
+                    .disabled(messageText.trimmed.isEmpty || isRecording || isUploadingVoice)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
@@ -107,12 +119,16 @@ struct ChatDetailView: View {
                 chatVM.startListeningToMessages(matchId: matchId)
             }
         }
-        .alert("Voice Notes", isPresented: $showVoiceNoteInfo) {
+        .alert("Voice Note Error", isPresented: Binding(
+            get: { voiceErrorMessage != nil },
+            set: { if !$0 { voiceErrorMessage = nil } }
+        )) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Voice note messaging is in progress and will be available in an upcoming update.")
+            Text(voiceErrorMessage ?? "Unknown error")
         }
         .onDisappear {
+            stopRecording(cleanupOnly: true)
             chatVM.stopListening()
         }
     }
@@ -122,6 +138,83 @@ struct ChatDetailView: View {
               let senderId = authVM.currentUser?.id else { return }
         chatVM.sendMessage(matchId: matchId, senderId: senderId, text: messageText)
         messageText = ""
+    }
+
+    private func handleMicTap() {
+        if isRecording {
+            stopRecording(cleanupOnly: false)
+            uploadRecordedVoiceIfAvailable()
+        } else {
+            startRecording()
+        }
+    }
+
+    private func startRecording() {
+        let session = AVAudioSession.sharedInstance()
+        session.requestRecordPermission { granted in
+            DispatchQueue.main.async {
+                guard granted else {
+                    voiceErrorMessage = "Microphone permission denied. Please enable it in Settings."
+                    return
+                }
+
+                do {
+                    try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+                    try session.setActive(true)
+
+                    let url = FileManager.default.temporaryDirectory
+                        .appendingPathComponent("voice-note-\(UUID().uuidString).m4a")
+
+                    let settings: [String: Any] = [
+                        AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                        AVSampleRateKey: 12000,
+                        AVNumberOfChannelsKey: 1,
+                        AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+                    ]
+
+                    let recorder = try AVAudioRecorder(url: url, settings: settings)
+                    recorder.record()
+
+                    audioRecorder = recorder
+                    recordingURL = url
+                    isRecording = true
+                } catch {
+                    voiceErrorMessage = "Could not start recording."
+                }
+            }
+        }
+    }
+
+    private func stopRecording(cleanupOnly: Bool) {
+        audioRecorder?.stop()
+        audioRecorder = nil
+        isRecording = false
+
+        if cleanupOnly {
+            recordingURL = nil
+        }
+    }
+
+    private func uploadRecordedVoiceIfAvailable() {
+        guard let matchId = match.id,
+              let senderId = authVM.currentUser?.id,
+              let url = recordingURL else {
+            voiceErrorMessage = "Recording unavailable. Please try again."
+            return
+        }
+
+        isUploadingVoice = true
+        chatVM.sendVoiceMessage(matchId: matchId, senderId: senderId, fileURL: url) { success in
+            DispatchQueue.main.async {
+                isUploadingVoice = false
+                if success {
+                    try? FileManager.default.removeItem(at: url)
+                } else {
+                    voiceErrorMessage = "Failed to send voice note."
+                }
+                recordingURL = nil
+            }
+        }
     }
 }
 
@@ -135,16 +228,24 @@ struct MessageBubble: View {
             if isFromCurrentUser { Spacer(minLength: 60) }
 
             VStack(alignment: isFromCurrentUser ? .trailing : .leading, spacing: 4) {
-                Text(message.text)
-                    .font(.system(size: 15))
-                    .foregroundColor(isFromCurrentUser ? .white : .primary)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(isFromCurrentUser ? Color.nikahGreen : Color(.systemGray5))
-                    .cornerRadius(18, corners: isFromCurrentUser
-                        ? [.topLeft, .topRight, .bottomLeft]
-                        : [.topLeft, .topRight, .bottomRight]
+                if message.messageType == "voice", let audioURL = message.audioURL {
+                    VoiceMessageBubble(
+                        audioURL: audioURL,
+                        duration: message.audioDuration,
+                        isFromCurrentUser: isFromCurrentUser
                     )
+                } else {
+                    Text(message.text)
+                        .font(.system(size: 15))
+                        .foregroundColor(isFromCurrentUser ? .white : .primary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(isFromCurrentUser ? Color.nikahGreen : Color(.systemGray5))
+                        .cornerRadius(18, corners: isFromCurrentUser
+                            ? [.topLeft, .topRight, .bottomLeft]
+                            : [.topLeft, .topRight, .bottomRight]
+                        )
+                }
 
                 Text(message.timestamp.timeAgoDisplay)
                     .font(.system(size: 10))
@@ -154,5 +255,57 @@ struct MessageBubble: View {
 
             if !isFromCurrentUser { Spacer(minLength: 60) }
         }
+    }
+}
+
+private struct VoiceMessageBubble: View {
+    let audioURL: String
+    let duration: Double?
+    let isFromCurrentUser: Bool
+
+    @State private var player: AVPlayer?
+    @State private var isPlaying = false
+
+    var body: some View {
+        Button {
+            togglePlay()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                Text(durationText)
+                    .font(.system(size: 14, weight: .medium))
+            }
+            .foregroundColor(isFromCurrentUser ? .white : .primary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(isFromCurrentUser ? Color.nikahGreen : Color(.systemGray5))
+            .cornerRadius(18, corners: isFromCurrentUser
+                ? [.topLeft, .topRight, .bottomLeft]
+                : [.topLeft, .topRight, .bottomRight]
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var durationText: String {
+        guard let duration, duration.isFinite else { return "Voice note" }
+        return String(format: "%.0fs", max(1, duration))
+    }
+
+    private func togglePlay() {
+        guard let url = URL(string: audioURL) else { return }
+
+        if isPlaying {
+            player?.pause()
+            isPlaying = false
+            return
+        }
+
+        if player == nil {
+            player = AVPlayer(url: url)
+        }
+
+        player?.play()
+        isPlaying = true
     }
 }

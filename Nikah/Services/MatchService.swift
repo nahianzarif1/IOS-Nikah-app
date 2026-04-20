@@ -11,41 +11,50 @@ final class MatchService {
     // MARK: - Like a User
     /// Returns true in completion if a mutual match was created
     func likeUser(fromUserId: String, toUserId: String, completion: @escaping (Result<Bool, Error>) -> Void) {
-        let like = LikeModel(fromUserId: fromUserId, toUserId: toUserId, createdAt: Date())
-        manager.likesCollection.addDocument(data: like.toFirestoreData()) { [weak self] error in
-            guard let self = self else { return }
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-            // Check if reverse like exists
-            self.manager.likesCollection
-                .whereField("fromUserId", isEqualTo: toUserId)
-                .whereField("toUserId", isEqualTo: fromUserId)
-                .getDocuments { snapshot, error in
-                    if let error = error {
-                        completion(.failure(error))
-                        return
-                    }
-                    let reverseLikeExists = !(snapshot?.documents.isEmpty ?? true)
-                    if reverseLikeExists {
-                        self.createMatch(userId1: fromUserId, userId2: toUserId) { result in
-                            switch result {
-                            case .success:
-                                completion(.success(true))
-                            case .failure(let err):
-                                completion(.failure(err))
-                            }
+        let now = Date()
+        let request = InterestRequestModel(
+            fromUserId: fromUserId,
+            toUserId: toUserId,
+            status: .pending,
+            createdAt: now,
+            updatedAt: now
+        )
+
+        manager.requestsCollection
+            .whereField("fromUserId", isEqualTo: fromUserId)
+            .whereField("toUserId", isEqualTo: toUserId)
+            .getDocuments { [weak self] snapshot, error in
+                guard let self = self else { return }
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+
+                if let existing = snapshot?.documents.first {
+                    existing.reference.updateData([
+                        "status": RequestStatus.pending.rawValue,
+                        "updatedAt": Timestamp(date: now)
+                    ]) { updateError in
+                        if let updateError = updateError {
+                            completion(.failure(updateError))
+                        } else {
+                            completion(.success(false))
                         }
-                    } else {
-                        completion(.success(false))
+                    }
+                } else {
+                    self.manager.requestsCollection.addDocument(data: request.toFirestoreData()) { addError in
+                        if let addError = addError {
+                            completion(.failure(addError))
+                        } else {
+                            completion(.success(false))
+                        }
                     }
                 }
-        }
+            }
     }
 
     // MARK: - Create Match
-    private func createMatch(userId1: String, userId2: String, completion: @escaping (Result<Void, Error>) -> Void) {
+    func ensureMatch(userId1: String, userId2: String, completion: @escaping (Result<Void, Error>) -> Void) {
         manager.matchesCollection
             .whereField("users", arrayContains: userId1)
             .getDocuments { [weak self] snapshot, error in
@@ -94,7 +103,7 @@ final class MatchService {
 
     // MARK: - Check Already Liked
     func fetchLikedUserIds(fromUserId: String, completion: @escaping ([String]) -> Void) {
-        manager.likesCollection
+        manager.requestsCollection
             .whereField("fromUserId", isEqualTo: fromUserId)
             .getDocuments { snapshot, _ in
                 let ids = snapshot?.documents.compactMap {

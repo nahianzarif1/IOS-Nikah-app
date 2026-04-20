@@ -30,6 +30,10 @@ final class FirebaseManager {
         firestore.collection("likes")
     }
 
+    var requestsCollection: CollectionReference {
+        firestore.collection("requests")
+    }
+
     var reportsCollection: CollectionReference {
         firestore.collection("reports")
     }

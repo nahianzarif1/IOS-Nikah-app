@@ -65,10 +65,22 @@ struct MainTabView: View {
                     Label("Discover", systemImage: "heart.circle.fill")
                 }
 
+            RequestListView()
+                .environmentObject(authVM)
+                .tabItem {
+                    Label("Requests", systemImage: "envelope.fill")
+                }
+
             MatchListView()
                 .environmentObject(authVM)
                 .tabItem {
                     Label("Matches", systemImage: "star.fill")
+                }
+
+            ShortlistView()
+                .environmentObject(authVM)
+                .tabItem {
+                    Label("Shortlist", systemImage: "star.circle.fill")
                 }
 
             ChatListView()

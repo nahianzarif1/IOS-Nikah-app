@@ -68,3 +68,65 @@ struct LikeModel: Identifiable, Codable {
     }
 }
 
+enum RequestStatus: String, Codable {
+    case pending
+    case accepted
+    case rejected
+}
+
+struct InterestRequestModel: Identifiable, Codable {
+    var id: String?
+    var fromUserId: String
+    var toUserId: String
+    var status: RequestStatus
+    var createdAt: Date
+    var updatedAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case fromUserId
+        case toUserId
+        case status
+        case createdAt
+        case updatedAt
+    }
+
+    init(
+        id: String? = nil,
+        fromUserId: String = "",
+        toUserId: String = "",
+        status: RequestStatus = .pending,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
+    ) {
+        self.id = id
+        self.fromUserId = fromUserId
+        self.toUserId = toUserId
+        self.status = status
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    static func from(_ document: DocumentSnapshot) -> InterestRequestModel? {
+        guard let data = document.data() else { return nil }
+        let statusRaw = data["status"] as? String ?? RequestStatus.pending.rawValue
+        return InterestRequestModel(
+            id: document.documentID,
+            fromUserId: data["fromUserId"] as? String ?? "",
+            toUserId: data["toUserId"] as? String ?? "",
+            status: RequestStatus(rawValue: statusRaw) ?? .pending,
+            createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date(),
+            updatedAt: (data["updatedAt"] as? Timestamp)?.dateValue() ?? Date()
+        )
+    }
+
+    func toFirestoreData() -> [String: Any] {
+        [
+            "fromUserId": fromUserId,
+            "toUserId": toUserId,
+            "status": status.rawValue,
+            "createdAt": Timestamp(date: createdAt),
+            "updatedAt": Timestamp(date: updatedAt)
+        ]
+    }
+}
+
