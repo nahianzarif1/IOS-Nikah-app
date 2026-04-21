@@ -22,6 +22,12 @@ struct ProfileDetailView: View {
                     HStack(alignment: .firstTextBaseline) {
                         Text(user.displayName)
                             .font(.system(size: 26, weight: .bold))
+                        Text("#\(user.effectiveBiodataId)")
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.nikahCream)
+                            .clipShape(Capsule())
                         Text(", \(user.age)")
                             .font(.system(size: 22, weight: .light))
                         Spacer()
@@ -54,6 +60,7 @@ struct ProfileDetailView: View {
 
                     DetailCard(title: "Personal Details", icon: "list.bullet.rectangle") {
                         InfoRow(label: "Marital Status", value: user.maritalStatus.capitalized)
+                        InfoRow(label: "Complexion", value: user.complexion.capitalized)
                         InfoRow(label: "Height", value: user.height.heightFormatted)
                         InfoRow(label: "Weight", value: "\(Int(user.weight)) kg")
                         InfoRow(label: "Date of Birth", value: user.dateOfBirth.formattedShort)
@@ -67,9 +74,19 @@ struct ProfileDetailView: View {
                     }
 
                     DetailCard(title: "Education & Profession", icon: "graduationcap.fill") {
+                        InfoRow(label: "Education Type", value: user.educationType.capitalized)
                         InfoRow(label: "Profession", value: user.profession)
+                        InfoRow(label: "Income Class", value: user.incomeClass.capitalized)
+                        InfoRow(label: "Financial Status", value: user.financialStatus.capitalized)
                         InfoRow(label: "Education", value: user.education)
                         InfoRow(label: "Institution", value: user.institution)
+                    }
+
+                    DetailCard(title: "Biodata", icon: "doc.text.fill") {
+                        InfoRow(label: "Orphan", value: user.isOrphan ? "Yes" : "No")
+                        InfoRow(label: "Revert Muslim", value: user.isRevertMuslim ? "Yes" : "No")
+                        InfoRow(label: "Disabled", value: user.isDisabled ? "Yes" : "No")
+                        InfoRow(label: "Second Marriage", value: user.openToSecondMarriage ? "Open" : "No")
                     }
 
                     DetailCard(title: "Religious", icon: "moon.stars.fill") {

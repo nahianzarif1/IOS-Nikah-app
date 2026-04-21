@@ -9,7 +9,7 @@ struct CreateProfileView: View {
     @State private var currentStep: Int = 0
     @State private var selectedPhotoItems: [PhotosPickerItem] = []
 
-    let steps = ["Personal", "Location", "Profession", "Religious", "Photos"]
+    let steps = ["Personal", "Location", "Profession", "Biodata", "Religious", "Photos"]
 
     init(user: UserModel) {
         _profileVM = StateObject(wrappedValue: ProfileViewModel(user: user))
@@ -32,8 +32,9 @@ struct CreateProfileView: View {
                         case 0: personalSection
                         case 1: locationSection
                         case 2: professionSection
-                        case 3: religiousSection
-                        case 4: photosSection
+                        case 3: biodataSection
+                        case 4: religiousSection
+                        case 5: photosSection
                         default: EmptyView()
                         }
                     }
@@ -93,6 +94,10 @@ struct CreateProfileView: View {
         VStack(spacing: 16) {
             SectionCard(title: "Personal Details") {
                 FormTextField(label: "Display Name", placeholder: "Your name", text: $profileVM.user.displayName)
+                FormTextField(label: "Biodata ID", placeholder: "Auto-generated if left blank", text: Binding(
+                    get: { profileVM.user.biodataId },
+                    set: { profileVM.user.biodataId = $0 }
+                ))
                 FormTextField(label: "Bio", placeholder: "Tell about yourself...", text: $profileVM.user.bio, isMultiline: true)
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -135,8 +140,26 @@ struct CreateProfileView: View {
     private var professionSection: some View {
         SectionCard(title: "Education & Profession") {
             FormTextField(label: "Profession", placeholder: "e.g. Student, Engineer", text: $profileVM.user.profession)
+            FormPickerField(label: "Income Class", selection: $profileVM.user.incomeClass, options: ["lower", "middle", "upper_middle", "upper"])
+            FormPickerField(label: "Financial Status", selection: $profileVM.user.financialStatus, options: ["stable", "comfortable", "affluent", "dependent"])
             FormTextField(label: "Education", placeholder: "e.g. BSc in CSE", text: $profileVM.user.education)
+            FormPickerField(label: "Education Type", selection: $profileVM.user.educationType, options: ["general", "madrasa", "both"])
             FormTextField(label: "Institution", placeholder: "e.g. KUET", text: $profileVM.user.institution)
+        }
+    }
+
+    // MARK: - Step 4: Biodata Details
+    private var biodataSection: some View {
+        SectionCard(title: "Biodata Details") {
+            FormPickerField(label: "Complexion", selection: $profileVM.user.complexion, options: ["fair", "medium", "wheatish", "dark", "other"])
+            Toggle("Orphan", isOn: $profileVM.user.isOrphan)
+                .tint(.nikahGreen)
+            Toggle("Revert Muslim", isOn: $profileVM.user.isRevertMuslim)
+                .tint(.nikahGreen)
+            Toggle("Disabled", isOn: $profileVM.user.isDisabled)
+                .tint(.nikahGreen)
+            Toggle("Open to second marriage", isOn: $profileVM.user.openToSecondMarriage)
+                .tint(.nikahGreen)
         }
     }
 

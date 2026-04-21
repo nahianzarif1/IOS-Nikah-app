@@ -3,12 +3,16 @@
 import Foundation
 
 struct FilterModel: Codable {
+    var biodataId: String
+    var country: String
     var district: String
     var minAge: Int
     var maxAge: Int
     var profession: String
     var education: String
+    var educationType: String
     var maritalStatus: String
+    var financialStatus: String
     var minHeight: Double
     var maxHeight: Double
     var onlyVerified: Bool
@@ -18,12 +22,16 @@ struct FilterModel: Codable {
     var requireNiqab: Bool
 
     init(
+        biodataId: String = "",
+        country: String = "",
         district: String = "",
         minAge: Int = 18,
         maxAge: Int = 60,
         profession: String = "",
         education: String = "",
+        educationType: String = "",
         maritalStatus: String = "",
+        financialStatus: String = "",
         minHeight: Double = 4.0,
         maxHeight: Double = 7.0,
         onlyVerified: Bool = false,
@@ -32,12 +40,16 @@ struct FilterModel: Codable {
         minDeenLevel: Int = 1,
         requireNiqab: Bool = false
     ) {
+        self.biodataId = biodataId
+        self.country = country
         self.district = district
         self.minAge = minAge
         self.maxAge = maxAge
         self.profession = profession
         self.education = education
+        self.educationType = educationType
         self.maritalStatus = maritalStatus
+        self.financialStatus = financialStatus
         self.minHeight = minHeight
         self.maxHeight = maxHeight
         self.onlyVerified = onlyVerified
@@ -48,12 +60,16 @@ struct FilterModel: Codable {
     }
 
     var isDefault: Bool {
+        biodataId.isEmpty &&
+        country.isEmpty &&
         district.isEmpty &&
         minAge == 18 &&
         maxAge == 60 &&
         profession.isEmpty &&
         education.isEmpty &&
+        educationType.isEmpty &&
         maritalStatus.isEmpty &&
+        financialStatus.isEmpty &&
         minHeight == 4.0 &&
         maxHeight == 7.0 &&
         !onlyVerified &&

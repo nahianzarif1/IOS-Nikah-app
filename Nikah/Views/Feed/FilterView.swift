@@ -31,6 +31,25 @@ struct FilterView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // MARK: Biodata ID and Location
+                Section(header: Text("Search Identity")) {
+                    TextField("Biodata ID", text: $localFilter.biodataId)
+                        .autocorrectionDisabled()
+
+                    Picker("Country", selection: $localFilter.country) {
+                        Text("Any Country").tag("")
+                        Text("Bangladesh").tag("Bangladesh")
+                        Text("India").tag("India")
+                        Text("Pakistan").tag("Pakistan")
+                        Text("Saudi Arabia").tag("Saudi Arabia")
+                        Text("UAE").tag("UAE")
+                        Text("Qatar").tag("Qatar")
+                        Text("Oman").tag("Oman")
+                        Text("Malaysia").tag("Malaysia")
+                        Text("Other Abroad").tag("Other Abroad")
+                    }
+                }
+
                 // MARK: District
                 Section(header: Text("District")) {
                     Picker("District", selection: $localFilter.district) {
@@ -159,6 +178,23 @@ struct FilterView: View {
                 Section(header: Text("Education")) {
                     TextField("Any education", text: $localFilter.education)
                         .autocorrectionDisabled()
+                    Picker("Education Type", selection: $localFilter.educationType) {
+                        Text("Any Type").tag("")
+                        Text("General").tag("general")
+                        Text("Madrasa").tag("madrasa")
+                        Text("Both").tag("both")
+                    }
+                }
+
+                // MARK: Financial
+                Section(header: Text("Financial Status")) {
+                    Picker("Financial Status", selection: $localFilter.financialStatus) {
+                        Text("Any").tag("")
+                        Text("Stable").tag("stable")
+                        Text("Comfortable").tag("comfortable")
+                        Text("Affluent").tag("affluent")
+                        Text("Dependent").tag("dependent")
+                    }
                 }
 
                 // MARK: Reset
