@@ -77,45 +77,52 @@ struct MainTabView: View {
     @EnvironmentObject var authVM: AuthViewModel
 
     var body: some View {
-        TabView {
+        TabView(selection: $authVM.mainTabSelection) {
             HomeFeedView()
                 .environmentObject(authVM)
+                .tag(0)
                 .tabItem {
                     Label("Discover", systemImage: "heart.circle.fill")
                 }
 
             RequestListView()
                 .environmentObject(authVM)
+                .tag(1)
                 .tabItem {
                     Label("Requests", systemImage: "envelope.fill")
                 }
 
             MatchListView()
                 .environmentObject(authVM)
+                .tag(2)
                 .tabItem {
                     Label("Matches", systemImage: "star.fill")
                 }
 
             ShortlistView()
                 .environmentObject(authVM)
+                .tag(3)
                 .tabItem {
                     Label("Shortlist", systemImage: "star.circle.fill")
                 }
 
             ChatListView()
                 .environmentObject(authVM)
+                .tag(4)
                 .tabItem {
                     Label("Messages", systemImage: "bubble.left.and.bubble.right.fill")
                 }
 
             CommunityHubView()
                 .environmentObject(authVM)
+                .tag(5)
                 .tabItem {
                     Label("Community", systemImage: "person.3.fill")
                 }
 
             SettingsView()
                 .environmentObject(authVM)
+                .tag(6)
                 .tabItem {
                     Label("Settings", systemImage: "gearshape.fill")
                 }

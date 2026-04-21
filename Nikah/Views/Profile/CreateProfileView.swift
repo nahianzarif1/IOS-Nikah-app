@@ -67,6 +67,7 @@ struct CreateProfileView: View {
                                 updatedUser.profileCompleted = true
                                 profileVM.user = updatedUser
                                 authVM.currentUser = updatedUser
+                                authVM.mainTabSelection = 0
 
                                 // Do not block navigation with a success alert on onboarding completion.
                                 profileVM.successMessage = nil

@@ -10,6 +10,7 @@ import FirebaseFirestore
 final class AuthViewModel: ObservableObject {
     @Published var currentUser: UserModel?
     @Published var isLoggedIn: Bool = false
+    @Published var mainTabSelection: Int = 0
     @Published var isEmailVerified: Bool? = nil
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
@@ -29,11 +30,13 @@ final class AuthViewModel: ObservableObject {
             Task { @MainActor in
                 if let user = user {
                     self?.isLoggedIn = true
+                    self?.mainTabSelection = 0
                     self?.isEmailVerified = user.isEmailVerified
                     self?.fetchCurrentUser(uid: user.uid)
                 } else {
                     self?.isLoggedIn = false
                     self?.currentUser = nil
+                    self?.mainTabSelection = 0
                     self?.isEmailVerified = nil
                     self?.shouldBypassEmailVerification = false
                 }
@@ -170,6 +173,7 @@ final class AuthViewModel: ObservableObject {
             try AuthService.shared.logout()
             currentUser = nil
             isLoggedIn = false
+            mainTabSelection = 0
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -185,6 +189,7 @@ final class AuthViewModel: ObservableObject {
                 case .success:
                     self?.currentUser = nil
                     self?.isLoggedIn = false
+                    self?.mainTabSelection = 0
                 case .failure(let error):
                     self?.errorMessage = error.localizedDescription
                 }

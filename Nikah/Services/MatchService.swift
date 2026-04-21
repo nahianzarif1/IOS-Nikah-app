@@ -12,6 +12,42 @@ final class MatchService {
     /// Returns true in completion if a mutual match was created
     func likeUser(fromUserId: String, toUserId: String, completion: @escaping (Result<Bool, Error>) -> Void) {
         let now = Date()
+
+        // If the target user already has a pending request to me, accepting it should create a match immediately.
+        manager.requestsCollection
+            .whereField("fromUserId", isEqualTo: toUserId)
+            .whereField("toUserId", isEqualTo: fromUserId)
+            .whereField("status", isEqualTo: RequestStatus.pending.rawValue)
+            .limit(to: 1)
+            .getDocuments { [weak self] reverseSnapshot, reverseError in
+                guard let self = self else { return }
+                if let reverseError = reverseError {
+                    completion(.failure(reverseError))
+                    return
+                }
+
+                if let reverseDoc = reverseSnapshot?.documents.first {
+                    reverseDoc.reference.updateData([
+                        "status": RequestStatus.accepted.rawValue,
+                        "updatedAt": Timestamp(date: now)
+                    ]) { updateError in
+                        if let updateError = updateError {
+                            completion(.failure(updateError))
+                            return
+                        }
+
+                        self.ensureMatch(userId1: fromUserId, userId2: toUserId) { matchResult in
+                            switch matchResult {
+                            case .success:
+                                completion(.success(true))
+                            case .failure(let error):
+                                completion(.failure(error))
+                            }
+                        }
+                    }
+                    return
+                }
+
         let request = InterestRequestModel(
             fromUserId: fromUserId,
             toUserId: toUserId,
@@ -20,36 +56,36 @@ final class MatchService {
             updatedAt: now
         )
 
-        manager.requestsCollection
-            .whereField("fromUserId", isEqualTo: fromUserId)
-            .whereField("toUserId", isEqualTo: toUserId)
-            .getDocuments { [weak self] snapshot, error in
-                guard let self = self else { return }
-                if let error = error {
-                    completion(.failure(error))
-                    return
-                }
+                self.manager.requestsCollection
+                    .whereField("fromUserId", isEqualTo: fromUserId)
+                    .whereField("toUserId", isEqualTo: toUserId)
+                    .getDocuments { snapshot, error in
+                        if let error = error {
+                            completion(.failure(error))
+                            return
+                        }
 
-                if let existing = snapshot?.documents.first {
-                    existing.reference.updateData([
-                        "status": RequestStatus.pending.rawValue,
-                        "updatedAt": Timestamp(date: now)
-                    ]) { updateError in
-                        if let updateError = updateError {
-                            completion(.failure(updateError))
+                        if let existing = snapshot?.documents.first {
+                            existing.reference.updateData([
+                                "status": RequestStatus.pending.rawValue,
+                                "updatedAt": Timestamp(date: now)
+                            ]) { updateError in
+                                if let updateError = updateError {
+                                    completion(.failure(updateError))
+                                } else {
+                                    completion(.success(false))
+                                }
+                            }
                         } else {
-                            completion(.success(false))
+                            self.manager.requestsCollection.addDocument(data: request.toFirestoreData()) { addError in
+                                if let addError = addError {
+                                    completion(.failure(addError))
+                                } else {
+                                    completion(.success(false))
+                                }
+                            }
                         }
                     }
-                } else {
-                    self.manager.requestsCollection.addDocument(data: request.toFirestoreData()) { addError in
-                        if let addError = addError {
-                            completion(.failure(addError))
-                        } else {
-                            completion(.success(false))
-                        }
-                    }
-                }
             }
     }
 

@@ -39,7 +39,10 @@ final class RequestViewModel: ObservableObject {
         guard let requestId = request.id else { return }
         RequestService.shared.updateRequestStatus(requestId: requestId, status: .accepted) { [weak self] result in
             Task { @MainActor [weak self] in
-                if case .failure(let error) = result {
+                switch result {
+                case .success:
+                    self?.incomingRequests.removeAll { $0.id == requestId }
+                case .failure(let error):
                     self?.errorMessage = error.localizedDescription
                 }
             }
@@ -50,7 +53,10 @@ final class RequestViewModel: ObservableObject {
         guard let requestId = request.id else { return }
         RequestService.shared.updateRequestStatus(requestId: requestId, status: .rejected) { [weak self] result in
             Task { @MainActor [weak self] in
-                if case .failure(let error) = result {
+                switch result {
+                case .success:
+                    self?.incomingRequests.removeAll { $0.id == requestId }
+                case .failure(let error):
                     self?.errorMessage = error.localizedDescription
                 }
             }

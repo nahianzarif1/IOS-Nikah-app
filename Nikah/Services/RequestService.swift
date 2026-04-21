@@ -11,7 +11,6 @@ final class RequestService {
         manager.requestsCollection
             .whereField("toUserId", isEqualTo: userId)
             .whereField("status", isEqualTo: RequestStatus.pending.rawValue)
-            .order(by: "createdAt", descending: true)
             .addSnapshotListener { snapshot, error in
                 if let error = error {
                     completion(.failure(error))
@@ -19,7 +18,8 @@ final class RequestService {
                 }
 
                 Task { @MainActor in
-                    let requests = snapshot?.documents.compactMap(InterestRequestModel.from) ?? []
+                    let requests = (snapshot?.documents.compactMap(InterestRequestModel.from) ?? [])
+                        .sorted { $0.createdAt > $1.createdAt }
                     completion(.success(requests))
                 }
             }
