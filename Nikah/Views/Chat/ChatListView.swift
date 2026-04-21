@@ -34,8 +34,8 @@ struct ChatListView: View {
     private var chatList: some View {
         List {
             ForEach(chatVM.matches) { match in
-                if let otherId = match.otherUserId(currentUserId: authVM.currentUser?.id ?? ""),
-                   let otherUser = chatVM.matchedUsers[otherId] {
+                if let matchId = match.id,
+                   let otherUser = chatVM.matchedUsersByMatchId[matchId] {
                     NavigationLink {
                         ChatDetailView(match: match, otherUser: otherUser)
                             .environmentObject(authVM)

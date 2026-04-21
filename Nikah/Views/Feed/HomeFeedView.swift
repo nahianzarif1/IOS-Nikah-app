@@ -6,7 +6,6 @@ struct HomeFeedView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @StateObject private var feedVM = FeedViewModel()
     @State private var showFilters = false
-    @State private var showMatchAlert = false
 
     var body: some View {
         NavigationStack {
@@ -64,6 +63,11 @@ struct HomeFeedView: View {
                     feedVM.loadFeed(currentUser: user)
                 }
             }
+            .refreshable {
+                if let user = authVM.currentUser {
+                    feedVM.refreshDiscover(currentUser: user)
+                }
+            }
         }
     }
 
@@ -116,7 +120,6 @@ struct HomeFeedView: View {
             Text("Please add your photo, district, and age to access the feed.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
             NavigationLink {
@@ -127,51 +130,68 @@ struct HomeFeedView: View {
             } label: {
                 Text("Complete Profile")
                     .nikahButton()
-                    .padding(.horizontal, 40)
+                    .padding(.horizontal, 60)
+            }
+
+            Button {
+                authVM.refresh()
+            } label: {
+                Text("Refresh")
+                    .foregroundColor(.nikahGreen)
             }
         }
         .padding()
     }
 
-    // MARK: - Loading
+    // MARK: - Loading View
     private var loadingView: some View {
         VStack(spacing: 16) {
             ProgressView()
-                .scaleEffect(1.5)
-            Text("Finding profiles...")
-                .font(.subheadline)
+                .scaleEffect(1.3)
+            Text("Loading profiles...")
                 .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // MARK: - Empty Feed
+    // MARK: - Empty Feed View
     private var emptyFeedView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "person.3.sequence.fill")
-                .font(.system(size: 72))
-                .foregroundColor(.nikahGreen.opacity(0.5))
+        VStack(spacing: 18) {
+            Image(systemName: "person.2.slash")
+                .font(.system(size: 60))
+                .foregroundColor(.gray)
 
             Text("No profiles found")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.title3)
+                .fontWeight(.semibold)
 
-            Text("Try removing some filters or check back later.")
+            Text("Try widening your filters or check back later.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
             Button {
-                if !feedVM.filter.isDefault {
-                    feedVM.filter = FilterModel()
-                }
                 if let user = authVM.currentUser {
-                    feedVM.loadFeed(currentUser: user)
+                    feedVM.refreshDiscover(currentUser: user)
                 }
             } label: {
-                Text("Refresh")
+                Text("Refresh Profiles")
                     .nikahButton()
                     .padding(.horizontal, 60)
+            }
+
+            if !feedVM.filter.isDefault {
+                Button {
+                    feedVM.filter = FilterModel()
+                    if let user = authVM.currentUser {
+                        feedVM.refreshDiscover(currentUser: user)
+                    }
+                } label: {
+                    Text("Reset Filters")
+                    .nikahButton()
+                    .padding(.horizontal, 60)
+                }
             }
         }
         .padding()

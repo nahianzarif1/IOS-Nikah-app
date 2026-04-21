@@ -41,8 +41,8 @@ struct MatchListView: View {
                 spacing: 16
             ) {
                 ForEach(chatVM.matches) { match in
-                    if let otherId = match.otherUserId(currentUserId: authVM.currentUser?.id ?? ""),
-                       let otherUser = chatVM.matchedUsers[otherId] {
+                    if let matchId = match.id,
+                       let otherUser = chatVM.matchedUsersByMatchId[matchId] {
                         NavigationLink {
                             ChatDetailView(match: match, otherUser: otherUser)
                                 .environmentObject(authVM)
@@ -50,7 +50,7 @@ struct MatchListView: View {
                             MatchCardView(user: otherUser)
                         }
                     } else {
-                        MatchCardPlaceholder()
+                        MatchUnavailableCard()
                     }
                 }
             }
@@ -122,14 +122,14 @@ struct MatchCardView: View {
     }
 }
 
-struct MatchCardPlaceholder: View {
+struct MatchUnavailableCard: View {
     var body: some View {
         VStack(spacing: 8) {
             Color(.systemGray5)
                 .frame(width: 150, height: 150)
                 .cornerRadius(20)
-                .overlay(ProgressView())
-            Text("Loading...")
+                .overlay(Image(systemName: "person.crop.circle.badge.exclamationmark").foregroundColor(.secondary))
+            Text("Profile unavailable")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

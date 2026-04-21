@@ -11,10 +11,13 @@ import FirebaseFirestore
 
 @main
 struct NikahApp: App {
-    @StateObject private var authVM = AuthViewModel()
+    @StateObject private var authVM: AuthViewModel
 
     init() {
-        FirebaseApp.configure()
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
+        }
+        _authVM = StateObject(wrappedValue: AuthViewModel())
     }
 
     var body: some Scene {

@@ -11,8 +11,18 @@ final class ChatService {
 
     // MARK: - Send Message
     func sendMessage(_ message: MessageModel, completion: @escaping (Error?) -> Void) {
-        manager.messagesCollection(matchId: message.matchId)
-            .addDocument(data: message.toFirestoreData(), completion: completion)
+        MatchService.shared.validateChatAccess(matchId: message.matchId, userId: message.senderId) { [weak self] result in
+            guard let self else { return }
+
+            switch result {
+            case .failure(let error):
+                completion(error)
+
+            case .success:
+                self.manager.messagesCollection(matchId: message.matchId)
+                    .addDocument(data: message.toFirestoreData(), completion: completion)
+            }
+        }
     }
 
     // MARK: - Listen to Messages
@@ -31,4 +41,3 @@ final class ChatService {
             }
     }
 }
-

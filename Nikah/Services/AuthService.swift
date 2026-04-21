@@ -11,12 +11,15 @@ final class AuthService {
 
     // MARK: - Register
     func register(email: String, password: String, gender: String, completion: @escaping (Result<UserModel, Error>) -> Void) {
-        manager.auth.createUser(withEmail: email, password: password) { [weak self] result, error in
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        manager.auth.createUser(withEmail: normalizedEmail, password: password) { [weak self] result, error in
             guard let self = self else { return }
             if let error = error {
                 completion(.failure(error))
                 return
             }
+            let authUser = result?.user
             guard let uid = result?.user.uid else {
                 completion(.failure(NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "UID not found"])))
                 return
@@ -25,7 +28,7 @@ final class AuthService {
             let newUser = UserModel(
                 id: uid,
                 displayName: "",
-                email: email.trimmingCharacters(in: .whitespaces),
+                email: normalizedEmail,
                 gender: gender,
                 age: 0,
                 dateOfBirth: Date(),
@@ -35,7 +38,13 @@ final class AuthService {
 
             self.manager.usersCollection.document(uid).setData(newUser.toFirestoreData()) { err in
                 if let err = err {
-                    completion(.failure(err))
+                    if let authUser {
+                        authUser.delete { _ in
+                            completion(.failure(err))
+                        }
+                    } else {
+                        completion(.failure(err))
+                    }
                 } else {
                     completion(.success(newUser))
                 }
@@ -45,7 +54,9 @@ final class AuthService {
 
     // MARK: - Login
     func login(email: String, password: String, completion: @escaping (Result<String, Error>) -> Void) {
-        manager.auth.signIn(withEmail: email, password: password) { result, error in
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        manager.auth.signIn(withEmail: normalizedEmail, password: password) { result, error in
             if let error = error {
                 completion(.failure(error))
                 return

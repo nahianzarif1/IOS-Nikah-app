@@ -16,6 +16,7 @@ final class FeedViewModel: ObservableObject {
     @Published var filter: FilterModel = FilterModel()
 
     private var likedUserIds: Set<String> = []
+    private var passedUserIds: [String] = []
 
     var currentProfile: UserModel? {
         guard currentIndex < profiles.count else { return nil }
@@ -31,8 +32,13 @@ final class FeedViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
-        // First load already liked ids to skip them
-        guard let uid = currentUser.id else { return }
+        guard let uid = currentUser.id else {
+            isLoading = false
+            errorMessage = "Unable to load the feed right now. Please refresh your profile and try again."
+            return
+        }
+
+        let passedUsers = passedUserIds
 
         MatchService.shared.fetchLikedUserIds(fromUserId: uid) { [weak self] likedIds in
             Task { @MainActor in
@@ -48,8 +54,20 @@ final class FeedViewModel: ObservableObject {
                         self.isLoading = false
                         switch result {
                         case .success(let users):
-                            self.profiles = users.shuffled()
+                            var refreshedUsers = users.shuffled()
+                            if !passedUsers.isEmpty {
+                                refreshedUsers.sort { lhs, rhs in
+                                    let lhsPassed = lhs.id.map(passedUsers.contains) ?? false
+                                    let rhsPassed = rhs.id.map(passedUsers.contains) ?? false
+                                    if lhsPassed != rhsPassed {
+                                        return lhsPassed
+                                    }
+                                    return lhs.displayName < rhs.displayName
+                                }
+                            }
+                            self.profiles = refreshedUsers
                             self.currentIndex = 0
+                            self.passedUserIds = []
                         case .failure(let error):
                             self.errorMessage = error.localizedDescription
                         }
@@ -83,7 +101,14 @@ final class FeedViewModel: ObservableObject {
 
     // MARK: - Pass Profile
     func passCurrentProfile() {
+        if let passedId = currentProfile?.id, !passedId.isEmpty {
+            passedUserIds.append(passedId)
+        }
         advance()
+    }
+
+    func refreshDiscover(currentUser: UserModel) {
+        loadFeed(currentUser: currentUser)
     }
 
     // MARK: - Advance to next card

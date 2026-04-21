@@ -24,6 +24,45 @@ final class UserService {
         }
     }
 
+    // MARK: - Fetch Multiple Users
+    func fetchUsers(uids: [String], completion: @escaping (Result<[String: UserModel], Error>) -> Void) {
+        let uniqueIds = Array(Set(uids)).filter { !$0.isEmpty }
+        guard !uniqueIds.isEmpty else {
+            completion(.success([:]))
+            return
+        }
+
+        var usersById: [String: UserModel] = [:]
+        var firstError: Error?
+        let group = DispatchGroup()
+
+        for uid in uniqueIds {
+            group.enter()
+            manager.usersCollection.document(uid).getDocument { snapshot, error in
+                defer { group.leave() }
+
+                if let error = error {
+                    firstError = error
+                    return
+                }
+
+                guard let snapshot, snapshot.exists, let user = UserModel.from(snapshot) else {
+                    return
+                }
+
+                usersById[uid] = user
+            }
+        }
+
+        group.notify(queue: .main) {
+            if let firstError {
+                completion(.failure(firstError))
+            } else {
+                completion(.success(usersById))
+            }
+        }
+    }
+
     // MARK: - Update User
     func updateUser(_ user: UserModel, completion: @escaping (Result<Void, Error>) -> Void) {
         guard let uid = user.id else {
@@ -112,4 +151,3 @@ final class UserService {
         manager.reportsCollection.addDocument(data: data, completion: completion)
     }
 }
-

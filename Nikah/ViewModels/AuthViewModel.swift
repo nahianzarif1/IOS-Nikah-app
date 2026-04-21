@@ -18,12 +18,17 @@ final class AuthViewModel: ObservableObject {
     init() {
         authStateHandle = FirebaseManager.shared.auth.addStateDidChangeListener { [weak self] _, user in
             Task { @MainActor in
+                guard let self = self else { return }
+                self.errorMessage = nil
+
                 if let user = user {
-                    self?.isLoggedIn = true
-                    self?.fetchCurrentUser(uid: user.uid)
+                    self.isLoggedIn = true
+                    self.isLoading = true
+                    self.fetchCurrentUser(uid: user.uid)
                 } else {
-                    self?.isLoggedIn = false
-                    self?.currentUser = nil
+                    self.isLoading = false
+                    self.isLoggedIn = false
+                    self.currentUser = nil
                 }
             }
         }
@@ -125,13 +130,18 @@ final class AuthViewModel: ObservableObject {
 
     // MARK: - Fetch Current User
     func fetchCurrentUser(uid: String) {
+        isLoading = true
         UserService.shared.fetchUser(uid: uid) { [weak self] result in
             Task { @MainActor in
+                guard let self = self else { return }
+                self.isLoading = false
                 switch result {
                 case .success(let user):
-                    self?.currentUser = user
+                    self.currentUser = user
+                    self.errorMessage = nil
                 case .failure(let error):
-                    self?.errorMessage = error.localizedDescription
+                    self.currentUser = nil
+                    self.errorMessage = error.localizedDescription
                 }
             }
         }
@@ -142,4 +152,5 @@ final class AuthViewModel: ObservableObject {
         guard let uid = AuthService.shared.currentUserId else { return }
         fetchCurrentUser(uid: uid)
     }
+
 }

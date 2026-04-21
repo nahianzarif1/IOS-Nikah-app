@@ -16,7 +16,9 @@ struct RootView: View {
     var body: some View {
         Group {
             if authVM.isLoggedIn {
-                if let user = authVM.currentUser {
+                if authVM.isLoading && authVM.currentUser == nil {
+                    sessionLoadingView
+                } else if let user = authVM.currentUser {
                     if user.profileCompleted {
                         MainTabView()
                             .environmentObject(authVM)
@@ -27,22 +29,54 @@ struct RootView: View {
                         }
                     }
                 } else {
-                    // Loading user data
-                    VStack(spacing: 16) {
-                        Image(systemName: "moon.stars.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(.nikahGreen)
-                        Text("Nikah")
-                            .font(.system(size: 36, weight: .bold, design: .rounded))
-                            .foregroundColor(.nikahGreen)
-                        ProgressView()
-                            .padding(.top, 8)
-                    }
+                    sessionRecoveryView
                 }
             } else {
                 LoginView()
                     .environmentObject(authVM)
             }
+        }
+    }
+
+    private var sessionLoadingView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "moon.stars.fill")
+                .font(.system(size: 60))
+                .foregroundColor(.nikahGreen)
+            Text("Nikah")
+                .font(.system(size: 36, weight: .bold, design: .rounded))
+                .foregroundColor(.nikahGreen)
+            ProgressView()
+                .padding(.top, 8)
+        }
+    }
+
+    private var sessionRecoveryView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "icloud.slash")
+                .font(.system(size: 54))
+                .foregroundColor(.orange)
+
+            Text("We couldn't load your account")
+                .font(.title3)
+                .fontWeight(.semibold)
+
+            Text(authVM.errorMessage ?? "Please try again.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+
+            Button("Try Again") {
+                authVM.refresh()
+            }
+            .nikahButton()
+            .padding(.horizontal, 32)
+
+            Button("Sign Out") {
+                authVM.logout()
+            }
+            .foregroundColor(.nikahGreen)
         }
     }
 }
@@ -88,7 +122,7 @@ struct ContentView: View {
     }
 }
 
+
 #Preview {
     ContentView().environmentObject(AuthViewModel())
 }
-

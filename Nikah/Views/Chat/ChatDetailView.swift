@@ -35,7 +35,6 @@ struct ChatDetailView: View {
                     }
                 }
             }
-
             Divider()
 
             // MARK: Input Bar
@@ -91,8 +90,8 @@ struct ChatDetailView: View {
             }
         }
         .onAppear {
-            if let matchId = match.id {
-                chatVM.startListeningToMessages(matchId: matchId)
+            if let matchId = match.id, let currentUserId = authVM.currentUser?.id {
+                chatVM.startListeningToMessages(matchId: matchId, userId: currentUserId)
             }
         }
         .onDisappear {
