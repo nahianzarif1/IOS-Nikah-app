@@ -133,6 +133,8 @@ final class CommunityHubViewModel: ObservableObject {
     @Published var successStoriesCount = 0
     @Published var usersCount = 0
     @Published var matchesCount = 0
+    @Published var maleUsersCount = 0
+    @Published var femaleUsersCount = 0
 
     private let manager = FirebaseManager.shared
 
@@ -211,6 +213,18 @@ final class CommunityHubViewModel: ObservableObject {
         manager.usersCollection.getDocuments { [weak self] snapshot, _ in
             Task { @MainActor [weak self] in
                 self?.usersCount = snapshot?.documents.count ?? 0
+            }
+        }
+
+        manager.usersCollection.whereField("gender", isEqualTo: "male").getDocuments { [weak self] snapshot, _ in
+            Task { @MainActor [weak self] in
+                self?.maleUsersCount = snapshot?.documents.count ?? 0
+            }
+        }
+
+        manager.usersCollection.whereField("gender", isEqualTo: "female").getDocuments { [weak self] snapshot, _ in
+            Task { @MainActor [weak self] in
+                self?.femaleUsersCount = snapshot?.documents.count ?? 0
             }
         }
 
@@ -364,6 +378,8 @@ struct CommunityHubView: View {
             VStack(spacing: 12) {
                 StatCard(title: "Success Stories", value: "\(vm.successStoriesCount)", subtitle: "Verified outcomes shared")
                 StatCard(title: "Total Members", value: "\(vm.usersCount)", subtitle: "Biodata profiles available")
+                StatCard(title: "Male Profiles", value: "\(vm.maleUsersCount)", subtitle: "Available for matchmaking")
+                StatCard(title: "Female Profiles", value: "\(vm.femaleUsersCount)", subtitle: "Available for matchmaking")
                 StatCard(title: "Accepted Matches", value: "\(vm.matchesCount)", subtitle: "Families connected")
 
                 VStack(alignment: .leading, spacing: 10) {

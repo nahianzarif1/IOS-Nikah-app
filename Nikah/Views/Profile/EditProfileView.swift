@@ -95,6 +95,12 @@ struct EditProfileView: View {
                             .multilineTextAlignment(.trailing)
                     }
                     HStack {
+                        Text("Biodata ID")
+                        Spacer()
+                        TextField("Auto-generated", text: $profileVM.user.biodataId)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    HStack {
                         Text("Bio")
                         Spacer()
                         TextField("Bio", text: $profileVM.user.bio)
@@ -151,11 +157,31 @@ struct EditProfileView: View {
                         TextField("Profession", text: $profileVM.user.profession)
                             .multilineTextAlignment(.trailing)
                     }
+                    Picker("Income Class", selection: $profileVM.user.incomeClass) {
+                        Text("Not set").tag("")
+                        Text("Lower").tag("lower")
+                        Text("Middle").tag("middle")
+                        Text("Upper Middle").tag("upper_middle")
+                        Text("Upper").tag("upper")
+                    }
+                    Picker("Financial Status", selection: $profileVM.user.financialStatus) {
+                        Text("Not set").tag("")
+                        Text("Stable").tag("stable")
+                        Text("Comfortable").tag("comfortable")
+                        Text("Affluent").tag("affluent")
+                        Text("Dependent").tag("dependent")
+                    }
                     HStack {
                         Text("Education")
                         Spacer()
                         TextField("Education", text: $profileVM.user.education)
                             .multilineTextAlignment(.trailing)
+                    }
+                    Picker("Education Type", selection: $profileVM.user.educationType) {
+                        Text("Not set").tag("")
+                        Text("General").tag("general")
+                        Text("Madrasa").tag("madrasa")
+                        Text("Both").tag("both")
                     }
                     HStack {
                         Text("Institution")
@@ -163,6 +189,22 @@ struct EditProfileView: View {
                         TextField("Institution", text: $profileVM.user.institution)
                             .multilineTextAlignment(.trailing)
                     }
+                }
+
+                // MARK: Biodata
+                Section(header: Text("Biodata")) {
+                    Picker("Complexion", selection: $profileVM.user.complexion) {
+                        Text("Not set").tag("")
+                        Text("Fair").tag("fair")
+                        Text("Medium").tag("medium")
+                        Text("Wheatish").tag("wheatish")
+                        Text("Dark").tag("dark")
+                        Text("Other").tag("other")
+                    }
+                    Toggle("Orphan", isOn: $profileVM.user.isOrphan).tint(.nikahGreen)
+                    Toggle("Revert Muslim", isOn: $profileVM.user.isRevertMuslim).tint(.nikahGreen)
+                    Toggle("Disabled", isOn: $profileVM.user.isDisabled).tint(.nikahGreen)
+                    Toggle("Open to second marriage", isOn: $profileVM.user.openToSecondMarriage).tint(.nikahGreen)
                 }
 
                 // MARK: Religious

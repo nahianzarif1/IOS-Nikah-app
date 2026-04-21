@@ -24,6 +24,7 @@ final class AuthService {
 
             let newUser = UserModel(
                 id: uid,
+                biodataId: uid,
                 displayName: "",
                 email: email.trimmingCharacters(in: .whitespaces),
                 gender: gender,

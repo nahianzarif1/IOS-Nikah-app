@@ -5,6 +5,7 @@ import FirebaseFirestore
 
 struct UserModel: Identifiable, Codable, Equatable {
     var id: String?
+    var biodataId: String
     var displayName: String
     var email: String
     var gender: String
@@ -18,7 +19,10 @@ struct UserModel: Identifiable, Codable, Equatable {
     var education: String
     var institution: String
     var profession: String
+    var incomeClass: String
+    var financialStatus: String
     var maritalStatus: String
+    var complexion: String
     var religion: String
     var madhhab: String
     var deenLevel: Int
@@ -28,6 +32,11 @@ struct UserModel: Identifiable, Codable, Equatable {
     var beard: Bool
     var hijab: Bool
     var niqab: Bool
+    var educationType: String
+    var isOrphan: Bool
+    var isRevertMuslim: Bool
+    var isDisabled: Bool
+    var openToSecondMarriage: Bool
     var height: Double
     var weight: Double
     var photos: [String]          // Array of Cloudinary URLs
@@ -40,6 +49,7 @@ struct UserModel: Identifiable, Codable, Equatable {
     // id is excluded from Codable — set manually from documentID
     enum CodingKeys: String, CodingKey {
         case displayName
+        case biodataId
         case email
         case gender
         case age
@@ -52,7 +62,10 @@ struct UserModel: Identifiable, Codable, Equatable {
         case education
         case institution
         case profession
+        case incomeClass
+        case financialStatus
         case maritalStatus
+        case complexion
         case religion
         case madhhab
         case deenLevel
@@ -62,6 +75,11 @@ struct UserModel: Identifiable, Codable, Equatable {
         case beard
         case hijab
         case niqab
+        case educationType
+        case isOrphan
+        case isRevertMuslim
+        case isDisabled
+        case openToSecondMarriage
         case height
         case weight
         case photos
@@ -74,6 +92,7 @@ struct UserModel: Identifiable, Codable, Equatable {
 
     init(
         id: String? = nil,
+        biodataId: String = "",
         displayName: String = "",
         email: String = "",
         gender: String = "",
@@ -87,7 +106,10 @@ struct UserModel: Identifiable, Codable, Equatable {
         education: String = "",
         institution: String = "",
         profession: String = "",
+        incomeClass: String = "",
+        financialStatus: String = "",
         maritalStatus: String = "unmarried",
+        complexion: String = "",
         religion: String = "Islam",
         madhhab: String = "",
         deenLevel: Int = 1,
@@ -97,6 +119,11 @@ struct UserModel: Identifiable, Codable, Equatable {
         beard: Bool = false,
         hijab: Bool = false,
         niqab: Bool = false,
+        educationType: String = "",
+        isOrphan: Bool = false,
+        isRevertMuslim: Bool = false,
+        isDisabled: Bool = false,
+        openToSecondMarriage: Bool = false,
         height: Double = 0,
         weight: Double = 0,
         photos: [String] = [],
@@ -107,6 +134,7 @@ struct UserModel: Identifiable, Codable, Equatable {
         blockedUsers: [String] = []
     ) {
         self.id = id
+        self.biodataId = biodataId
         self.displayName = displayName
         self.email = email
         self.gender = gender
@@ -120,7 +148,10 @@ struct UserModel: Identifiable, Codable, Equatable {
         self.education = education
         self.institution = institution
         self.profession = profession
+        self.incomeClass = incomeClass
+        self.financialStatus = financialStatus
         self.maritalStatus = maritalStatus
+        self.complexion = complexion
         self.religion = religion
         self.madhhab = madhhab
         self.deenLevel = deenLevel
@@ -130,6 +161,11 @@ struct UserModel: Identifiable, Codable, Equatable {
         self.beard = beard
         self.hijab = hijab
         self.niqab = niqab
+        self.educationType = educationType
+        self.isOrphan = isOrphan
+        self.isRevertMuslim = isRevertMuslim
+        self.isDisabled = isDisabled
+        self.openToSecondMarriage = openToSecondMarriage
         self.height = height
         self.weight = weight
         self.photos = photos
@@ -142,6 +178,10 @@ struct UserModel: Identifiable, Codable, Equatable {
 
     var firstPhoto: String? {
         photos.first
+    }
+
+    var effectiveBiodataId: String {
+        !biodataId.isEmpty ? biodataId : (id ?? "")
     }
 
     var isProfileReady: Bool {
@@ -166,6 +206,7 @@ struct UserModel: Identifiable, Codable, Equatable {
         }
         return UserModel(
             id: id,
+            biodataId: data["biodataId"] as? String ?? id,
             displayName: data["displayName"] as? String ?? "",
             email: data["email"] as? String ?? "",
             gender: data["gender"] as? String ?? "",
@@ -179,7 +220,10 @@ struct UserModel: Identifiable, Codable, Equatable {
             education: data["education"] as? String ?? "",
             institution: data["institution"] as? String ?? "",
             profession: data["profession"] as? String ?? "",
+            incomeClass: data["incomeClass"] as? String ?? "",
+            financialStatus: data["financialStatus"] as? String ?? "",
             maritalStatus: data["maritalStatus"] as? String ?? "unmarried",
+            complexion: data["complexion"] as? String ?? "",
             religion: data["religion"] as? String ?? "Islam",
             madhhab: data["madhhab"] as? String ?? "",
             deenLevel: data["deenLevel"] as? Int ?? 1,
@@ -189,6 +233,11 @@ struct UserModel: Identifiable, Codable, Equatable {
             beard: data["beard"] as? Bool ?? false,
             hijab: data["hijab"] as? Bool ?? false,
             niqab: data["niqab"] as? Bool ?? false,
+            educationType: data["educationType"] as? String ?? "",
+            isOrphan: data["isOrphan"] as? Bool ?? false,
+            isRevertMuslim: data["isRevertMuslim"] as? Bool ?? false,
+            isDisabled: data["isDisabled"] as? Bool ?? false,
+            openToSecondMarriage: data["openToSecondMarriage"] as? Bool ?? false,
             height: data["height"] as? Double ?? 0,
             weight: data["weight"] as? Double ?? 0,
             photos: data["photos"] as? [String] ?? [],
@@ -204,6 +253,7 @@ struct UserModel: Identifiable, Codable, Equatable {
     func toFirestoreData() -> [String: Any] {
         return [
             "displayName": displayName,
+            "biodataId": effectiveBiodataId,
             "email": email,
             "gender": gender,
             "age": age,
@@ -216,7 +266,10 @@ struct UserModel: Identifiable, Codable, Equatable {
             "education": education,
             "institution": institution,
             "profession": profession,
+            "incomeClass": incomeClass,
+            "financialStatus": financialStatus,
             "maritalStatus": maritalStatus,
+            "complexion": complexion,
             "religion": religion,
             "madhhab": madhhab,
             "deenLevel": deenLevel,
@@ -226,6 +279,11 @@ struct UserModel: Identifiable, Codable, Equatable {
             "beard": beard,
             "hijab": hijab,
             "niqab": niqab,
+            "educationType": educationType,
+            "isOrphan": isOrphan,
+            "isRevertMuslim": isRevertMuslim,
+            "isDisabled": isDisabled,
+            "openToSecondMarriage": openToSecondMarriage,
             "height": height,
             "weight": weight,
             "photos": photos,
