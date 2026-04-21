@@ -17,11 +17,7 @@ struct RootView: View {
     var body: some View {
         Group {
             if authVM.isLoggedIn {
-                // Block app access until the user verifies their email.
-                if authVM.isEmailVerified == false && authVM.shouldBypassEmailVerification == false {
-                    EmailVerificationView()
-                        .environmentObject(authVM)
-                } else if let user = authVM.currentUser {
+                if let user = authVM.currentUser {
                     if user.profileCompleted {
                         MainTabView()
                             .environmentObject(authVM)
@@ -40,8 +36,31 @@ struct RootView: View {
                         Text("Nikah")
                             .font(.system(size: 36, weight: .bold, design: .rounded))
                             .foregroundColor(.nikahGreen)
-                        ProgressView()
-                            .padding(.top, 8)
+                        if let err = authVM.errorMessage, !err.isEmpty {
+                            Text("Could not load your profile")
+                                .font(.headline)
+                            Text(err)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 24)
+
+                            HStack(spacing: 12) {
+                                Button("Retry") {
+                                    authVM.refresh()
+                                }
+                                .nikahButton(color: .nikahGreen)
+
+                                Button("Log out") {
+                                    authVM.logout()
+                                }
+                                .nikahButton(color: Color(.systemGray5), textColor: .nikahGreen)
+                            }
+                            .padding(.horizontal, 24)
+                        } else {
+                            ProgressView()
+                                .padding(.top, 8)
+                        }
                     }
                 }
             } else {
@@ -50,7 +69,6 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: authVM.isLoggedIn)
-        .animation(.easeInOut(duration: 0.25), value: authVM.isEmailVerified)
     }
 }
 

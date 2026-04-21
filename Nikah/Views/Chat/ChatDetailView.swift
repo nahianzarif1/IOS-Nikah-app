@@ -208,7 +208,7 @@ struct ChatDetailView: View {
 
     private func startRecording() {
         let session = AVAudioSession.sharedInstance()
-        session.requestRecordPermission { granted in
+        let permissionHandler: (Bool) -> Void = { granted in
             DispatchQueue.main.async {
                 guard granted else {
                     voiceErrorMessage = "Microphone permission denied. Please enable it in Settings."
@@ -239,6 +239,12 @@ struct ChatDetailView: View {
                     voiceErrorMessage = "Could not start recording."
                 }
             }
+        }
+
+        if #available(iOS 17.0, *) {
+            AVAudioApplication.requestRecordPermission(completionHandler: permissionHandler)
+        } else {
+            session.requestRecordPermission(permissionHandler)
         }
     }
 

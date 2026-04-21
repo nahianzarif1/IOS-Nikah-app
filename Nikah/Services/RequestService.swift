@@ -18,8 +18,10 @@ final class RequestService {
                     return
                 }
 
-                let requests = snapshot?.documents.compactMap(InterestRequestModel.from) ?? []
-                completion(.success(requests))
+                Task { @MainActor in
+                    let requests = snapshot?.documents.compactMap(InterestRequestModel.from) ?? []
+                    completion(.success(requests))
+                }
             }
     }
 
@@ -45,18 +47,20 @@ final class RequestService {
                     return
                 }
 
-                guard let document = snapshot,
-                      let request = InterestRequestModel.from(document) else {
-                    completion(.failure(NSError(domain: "RequestService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Request not found"])) )
-                    return
-                }
+                Task { @MainActor in
+                    guard let document = snapshot,
+                          let request = InterestRequestModel.from(document) else {
+                        completion(.failure(NSError(domain: "RequestService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Request not found"])) )
+                        return
+                    }
 
-                MatchService.shared.ensureMatch(userId1: request.fromUserId, userId2: request.toUserId) { matchResult in
-                    switch matchResult {
-                    case .success:
-                        completion(.success(()))
-                    case .failure(let error):
-                        completion(.failure(error))
+                    MatchService.shared.ensureMatch(userId1: request.fromUserId, userId2: request.toUserId) { matchResult in
+                        switch matchResult {
+                        case .success:
+                            completion(.success(()))
+                        case .failure(let error):
+                            completion(.failure(error))
+                        }
                     }
                 }
             }

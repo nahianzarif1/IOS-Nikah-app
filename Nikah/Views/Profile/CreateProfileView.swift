@@ -56,8 +56,25 @@ struct CreateProfileView: View {
                         .nikahButton()
                     } else {
                         Button {
-                            profileVM.saveProfile {
-                                authVM.refresh()
+                            if profileVM.isUploadingPhoto {
+                                profileVM.errorMessage = "Please wait until photo upload finishes."
+                                return
+                            }
+
+                            profileVM.saveProfile(markCompleted: true) {
+                                // Immediately switch root flow to Home after successful onboarding save.
+                                var updatedUser = profileVM.user
+                                updatedUser.profileCompleted = true
+                                profileVM.user = updatedUser
+                                authVM.currentUser = updatedUser
+
+                                // Do not block navigation with a success alert on onboarding completion.
+                                profileVM.successMessage = nil
+
+                                // Refresh backend state in background without blocking navigation.
+                                Task { @MainActor in
+                                    authVM.refresh()
+                                }
                             }
                         } label: {
                             if profileVM.isSaving {
@@ -67,7 +84,7 @@ struct CreateProfileView: View {
                             }
                         }
                         .nikahButton()
-                        .disabled(profileVM.isSaving)
+                        .disabled(profileVM.isSaving || profileVM.isUploadingPhoto)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -79,11 +96,6 @@ struct CreateProfileView: View {
                 Button("OK") { profileVM.errorMessage = nil }
             }, message: {
                 Text(profileVM.errorMessage ?? "")
-            })
-            .alert("Saved!", isPresented: .constant(profileVM.successMessage != nil), actions: {
-                Button("OK") { profileVM.successMessage = nil }
-            }, message: {
-                Text(profileVM.successMessage ?? "")
             })
         }
         .onTapGesture { hideKeyboard() }
@@ -268,7 +280,7 @@ struct CreateProfileView: View {
                             .foregroundColor(.nikahGreen)
                             .cornerRadius(10)
                     }
-                    .onChange(of: selectedPhotoItems) { items in
+                    .onChange(of: selectedPhotoItems) { _, items in
                         uploadSelectedPhotos(items)
                     }
                 }

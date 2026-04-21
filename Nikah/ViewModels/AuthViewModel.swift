@@ -19,7 +19,10 @@ final class AuthViewModel: ObservableObject {
 
     private var authStateHandle: AuthStateDidChangeListenerHandle?
     private var verificationTimeoutTask: Task<Void, Never>?
-    private let legacyBypassCutoff: Date = Calendar.current.date(from: DateComponents(year: 2026, month: 3, day: 31)) ?? .distantPast
+    // Accounts created before this date are treated as legacy (email verification not required).
+    private let emailVerificationRolloutDate: Date = Calendar.current.date(
+        from: DateComponents(year: 2026, month: 4, day: 21)
+    ) ?? .distantPast
 
     init() {
         authStateHandle = FirebaseManager.shared.auth.addStateDidChangeListener { [weak self] _, user in
@@ -38,11 +41,7 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
-    deinit {
-        if let handle = authStateHandle {
-            FirebaseManager.shared.auth.removeStateDidChangeListener(handle)
-        }
-    }
+    deinit {}
 
     // MARK: - Login
     func login(email: String, password: String) {
@@ -222,8 +221,8 @@ final class AuthViewModel: ObservableObject {
     }
 
     private func updateBypassStatus(for user: UserModel) {
-        // Legacy users created before cutoff or users manually marked verified can bypass email verification.
-        let legacyUser = user.createdAt < legacyBypassCutoff
+        // Legacy users (pre-rollout) or manually verified users can bypass email verification.
+        let legacyUser = user.createdAt < emailVerificationRolloutDate
         shouldBypassEmailVerification = legacyUser || user.isVerified
     }
 

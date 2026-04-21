@@ -57,7 +57,7 @@ struct EditProfileView: View {
                                     .background(Color.nikahGreen.opacity(0.08))
                                     .cornerRadius(10)
                                 }
-                                .onChange(of: selectedPhotoItems) { items in
+                                .onChange(of: selectedPhotoItems) { _, items in
                                     if let item = items.first {
                                         item.loadTransferable(type: Data.self) { result in
                                             DispatchQueue.main.async {

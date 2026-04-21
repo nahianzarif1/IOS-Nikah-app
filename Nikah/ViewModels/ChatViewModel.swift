@@ -87,8 +87,7 @@ final class ChatViewModel: ObservableObject {
     }
 
     func sendVoiceMessage(matchId: String, senderId: String, fileURL: URL, completion: ((Bool) -> Void)? = nil) {
-        let asset = AVURLAsset(url: fileURL)
-        let duration = CMTimeGetSeconds(asset.duration)
+        let duration = (try? AVAudioPlayer(contentsOf: fileURL).duration) ?? 0
 
         CloudinaryService.uploadAudio(fileURL: fileURL) { audioURL in
             guard let audioURL else {

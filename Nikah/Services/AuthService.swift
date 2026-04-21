@@ -38,10 +38,7 @@ final class AuthService {
                 if let err = err {
                     completion(.failure(err))
                 } else {
-                    // Send email verification after account creation.
-                    self.sendEmailVerification { _ in
-                        completion(.success(newUser))
-                    }
+                    completion(.success(newUser))
                 }
             }
         }

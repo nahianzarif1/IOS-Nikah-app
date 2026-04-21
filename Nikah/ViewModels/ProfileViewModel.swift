@@ -21,12 +21,14 @@ final class ProfileViewModel: ObservableObject {
     }
 
     // MARK: - Save Profile
-    func saveProfile(completion: (() -> Void)? = nil) {
+    func saveProfile(markCompleted: Bool = false, completion: (() -> Void)? = nil) {
         isSaving = true
         errorMessage = nil
 
-        // Mark profile completed if ready
-        if user.isProfileReady && !user.displayName.isEmpty {
+        // Mark profile completed if requested from onboarding flow.
+        if markCompleted {
+            user.profileCompleted = true
+        } else if user.isProfileReady && !user.displayName.isEmpty {
             user.profileCompleted = true
         }
 

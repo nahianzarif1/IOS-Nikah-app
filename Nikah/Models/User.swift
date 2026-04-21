@@ -201,8 +201,8 @@ struct UserModel: Identifiable, Codable, Equatable {
     }
 
     static func fromData(_ data: [String: Any], id: String) -> UserModel {
-        func date(_ key: String) -> Date {
-            (data[key] as? Timestamp)?.dateValue() ?? Date()
+        func date(_ key: String, default defaultValue: Date = Date()) -> Date {
+            (data[key] as? Timestamp)?.dateValue() ?? defaultValue
         }
         return UserModel(
             id: id,
@@ -243,7 +243,7 @@ struct UserModel: Identifiable, Codable, Equatable {
             photos: data["photos"] as? [String] ?? [],
             isVerified: data["isVerified"] as? Bool ?? false,
             profileCompleted: data["profileCompleted"] as? Bool ?? false,
-            createdAt: date("createdAt"),
+            createdAt: date("createdAt", default: .distantPast),
             lastActive: date("lastActive"),
             blockedUsers: data["blockedUsers"] as? [String] ?? []
         )
