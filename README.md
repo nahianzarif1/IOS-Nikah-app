@@ -131,6 +131,25 @@ firebase deploy --only firestore:rules
 5. Matched users exchange messages in match chat.
 6. Users can shortlist, block, and report profiles.
 
+
+
+
+
+## Starting Screen 
+<img width="1206" height="2622" alt="Simulator Screenshot - iPhone 17 - 2026-07-15 at 22 54 14" src="https://github.com/user-attachments/assets/c4c590a2-ecf9-4db8-afa8-2a8c57f59996" />
+
+## Other Screen images are given in the Nikah Photos Section.
+
+
+## Class Diagram
+<img width="2713" height="2868" alt="deepseek_mermaid_20260715_fee693" src="https://github.com/user-attachments/assets/46d02228-a563-43c0-99ad-61b9ce2c8ef5" />
+
+## Sequence Diagram
+<img width="6507" height="2963" alt="deepseek_mermaid_20260715_acd453" src="https://github.com/user-attachments/assets/da1497e4-28d6-4371-b8a5-2498c6178340" />
+
+## Activity Diagram
+<img width="2318" height="5398" alt="deepseek_mermaid_20260715_916729" src="https://github.com/user-attachments/assets/66202f29-c397-4483-929a-02f64196fd74" />
+
 ## Notes
 
 - This repository currently contains the iOS app source and Firebase rules.
